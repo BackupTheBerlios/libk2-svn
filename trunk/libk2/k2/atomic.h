@@ -25,18 +25,28 @@
 #   include <k2/config.h>
 #endif
 
+#if !defined(K2_ATOMIC_USE_GLIBC) && !defined(K2_ATOMIC_USE_WIN32_API) && !defined(K2_ATOMIC_USE_PTHREADS)
+#   if defined(K2_OS_LINUX)
+#       define  K2_ATOMIC_USE_GLIBC
+#   elif defined(K2_HAS_WIN32_API)
+#       define  K2_ATOMIC_USE_WIN32
+#   elif defined(K2_HAS_PTHREADS)
+#       define  K2_ATOMIC_USE_PTHREADS
+#   else
+#       error   "libk2: how to perform atomic operation???"
+#   endif
+#endif
+
 namespace k2
 {
 
     /**
     *   \brief  empty structure containing typedef  for platform-dependent atomic type.
     */
-#if defined(K2_OS_LINUX)
+#if defined(K2_ATOMIC_USE_GLIBC)
     typedef volatile int    atomic_int_t;
-#elif defined(K2_HAS_WIN32_API)
-    typedef long            atomic_int_t;
 #else
-    error   "How to perform atomic operation?"
+    typedef volatile long   atomic_int_t;
 #endif
 
     /**

@@ -481,9 +481,6 @@ namespace test_thread_local_singleton
 
 int main ()
 {
-    atomic_int_t    v = 0;
-    printf("%d\n", atomic_increase(v));
-    printf("%d\n", atomic_decrease(v));
     //for (size_t cnt = 0; ; ++cnt)
     {
 

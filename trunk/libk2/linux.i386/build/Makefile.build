@@ -32,7 +32,8 @@ clean:
 
 
 $(BIN)/libk2.so.$(VER_MAJOR).$(VER_MINOR): $(OBJS)
-	@g++ $(LD_FLAGS) -shared -Wl,-soname,$(BIN)/libk2.so.$(VER_MAJOR) \
+	@set -e ;\
+	g++ $(LD_FLAGS) -shared -Wl,-soname,$(BIN)/libk2.so.$(VER_MAJOR) \
 	-o $(BIN)/libk2.so.$(VER_MAJOR).$(VER_MINOR) $^  $(LD_PATH:%=-L%) $(LIBRARIES:%=-l%) ;\
 	/sbin/ldconfig -n $(BIN) ;\
 	ln -sf $(BIN)/libk2.so.$(VER_MAJOR) $(BIN)/libk2.so

@@ -20,85 +20,60 @@
 */
 #include <k2/atomic.h>
 
-#if defined(K2_OS_LINUX)
+#if defined(K2_ATOMIC_USE_GLIBC)
 #   include <bits/atomicity.h>
-#   include <linux/config.h>
-#   if defined(CONFIG_SMP)
-#       define LOCK "acquire ; "
-#   else
-#       define LOCK ""
-#   endif
-#elif defined(K2_HAS_WIN32_API)
+#elif defined(K2_ATOMIC_USE_WIN32_API)
 #   include <windows.h>
-#else
-#   error   "libk2: how to perform atomic operation???"
-#endif  //  K2_HAS_WIN32_API
+#elif defined(K2_ATOMIC_USE_PTHREADS)
+#   include <pthread.h>
+namespace
+{
+    pthread_mutex_t local_mtx = PTHREADS_MUTEX_INITIALIZER;
+}
+#endif
+
 
 namespace k2
 {
 
     bool atomic_increase (atomic_int_t& value) throw ()
-#   if defined(K2_OS_LINUX)
+#if defined(K2_ATOMIC_USE_GLIBC)
     {
-#if(1)
         __exchange_and_add(&value, 1);
         return  __exchange_and_add(&value, 0);
-#else
-    /**
-    * atomic_inc_and_test - increment and test
-    * @v: pointer of type atomic_t
-    *
-    * Atomically increments @v by 1
-    * and returns true if the result is zero, or false for all
-    * other cases.  Note that the guaranteed
-    * useful range of an atomic_t is only 24 bits.
-    */
-
-        unsigned char c;
-
-        __asm__ __volatile__(
-            LOCK "incl %0; sete %1"
-            :"=m" (value), "=qm" (c)
-            :"m" (value) : "memory");
-        return c != 0;
-#endif
     }
-#   else
+#elif defined(K2_ATOMIC_USE_WIN32_API)
     {
         return  ::InterlockedIncrement(&value) == 0 ? false : true;
     }
-#   endif
+#elif defined(K2_ATOMIC_USE_PTHREADS)
+    {
+        bool ret;
+        pthread_mutex_lock(&local_mtx);
+        ret = ++value;
+        pthread_mutex_unlock(&local_mtx);
+        return  ret;
+    }
+#endif
 
     bool atomic_decrease (atomic_int_t& value) throw ()
-#   if defined(K2_OS_LINUX)
+#if defined(K2_ATOMIC_USE_GLIBC)
     {
-#if(1)
         __exchange_and_add(&value, -1);
         return  __exchange_and_add(&value, 0);
-#else
-    /**
-    * atomic_dec_and_test - decrement and test
-    * @v: pointer of type atomic_t
-    *
-    * Atomically decrements @v by 1 and
-    * returns true if the result is 0, or false for all other
-    * cases.  Note that the guaranteed
-    * useful range of an atomic_t is only 24 bits.
-    */
-
-        unsigned char c;
-
-        __asm__ __volatile__(
-            LOCK "decl %0; sete %1"
-            :"=m" (value), "=qm" (c)
-            :"m" (value) : "memory");
-        return c != 0;
-#endif
     }
-#   else
+#elif defined(K2_ATOMIC_USE_WIN32_API)
     {
         return  ::InterlockedDecrement(&value) == 0 ? false : true;
     }
-#   endif
+#elif defined(K2_ATOMIC_USE_PTHREADS)
+    {
+        bool ret;
+        pthread_mutex_lock(&local_mtx);
+        ret = --value;
+        pthread_mutex_unlock(&local_mtx);
+        return  ret;
+    }
+#endif
 
 }   //  namespace k2

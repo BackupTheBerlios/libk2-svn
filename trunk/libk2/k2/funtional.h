@@ -38,15 +38,13 @@ namespace k2
     template <typename type_>
     struct functional_traits
     {
-    private:
+    public:
         typedef type_select<
             is_reference<type_>::value,
             strip_const<type_>::type,
             strip_const<type>::type&>::type
                                         reference;
         typedef const reference         const_reference;
-
-    public:
         typedef strip_reference<reference>::type
                                         value_type;
         typedef type_select<
@@ -55,15 +53,15 @@ namespace k2
             const_reference::type>::type
                                         input_type;
         typedef reference               output_type;
-        typedef const value_type        return_type;
     }
 
+    //  Specialization for std::auto_ptr<>, diables types where
+    //  std::auto_ptr<> has no semantics.
     template <typename type_>
     struct functional_traits<std::auto_ptr<type_> >
     {
-        typedef std::auto_ptr<type_>    value_type;
         typedef std::auto_ptr<type_>    input_type;
-        typedef value_type              return_type;
+        typedef std::auto_ptr<type_>    return_type;
     }
 
 }   //  namespace k2
