@@ -53,7 +53,7 @@
 namespace k2
 {
 
-    void reverse_byteorder (void* p, size_t n)
+    inline void reverse_byteorder (void* p, size_t n)
     {
 
 #if defined(K2_DEBUG)

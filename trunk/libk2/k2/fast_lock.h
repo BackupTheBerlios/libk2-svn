@@ -28,17 +28,23 @@
     ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
     POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef K2_IPV4_UDP_H
-#define K2_IPV4_UDP_H
+#ifndef K2_FAST_LOCK_H
+#define K2_FAST_LOCK_H
 
 #ifndef K2_CONFIG_H
 #   include <k2/config.h>
 #endif
-#ifndef K2_IPV4_ADDR_H
-#   include <k2/ipv4_addr.h>
+#ifndef K2_MUTEX_H
+#   include <k2/mutex.h>
 #endif
-#ifndef K2_SOCKET_H
-#   include <k2/socket.h>
+#ifndef K2_SPIN_LOCK_H
+#   include <k2/spin_lock.h>
+#endif
+#ifndef K2_DUMMY_LOCK_H
+#   include <k2/dummy_lock.h>
+#endif
+#ifndef K2_SCOPE_H
+#   include <k2/scope.h>
 #endif
 #ifndef K2_COPY_BOUNCER_H
 #   include <k2/copy_bouncer.h>
@@ -47,40 +53,62 @@
 namespace k2
 {
 
-    /** \defgroup   Networking
-    */
-    namespace ipv4
+    class timestamp;
+
+    template <bool threading_>
+    struct fast_lock;
+
+    template <>
+    struct fast_lock<true>
     {
+    private:
+        typedef spin_lock   impl_type;
+        impl_type           m_impl;
 
-        /*  \ingroup    Networking
-        */
-        class udp_transport
+    public:
+        K2_INJECT_COPY_BOUNCER();
+
+        typedef scoped_guard<fast_lock<true> >
+            scoped_guard;
+
+        void acquire ()
         {
-        public:
-            K2_INJECT_COPY_BOUNCER();
+            m_impl.acquire();
+        }
+        bool acquire (const timestamp& timer)
+        {
+            m_impl.acquire(timer);
+        }
+        void release ()
+        {
+            m_impl.release();
+        }
+    };
+    template <>
+    struct fast_lock<false>
+    {
+    private:
+        typedef dummy_lock  impl_type;
+        impl_type           m_impl;
 
-            static const size_t io_error = size_t(-1);
+    public:
+        typedef scoped_guard<fast_lock<false> >
+            scoped_guard;
 
-            K2_DLSPEC explicit udp_transport (const transport_addr& local_addr);
-            K2_DLSPEC explicit udp_transport (const transport_addr& local_addr, const transport_addr& remote_addr);
-            K2_DLSPEC explicit udp_transport (int udp_desc, bool own);
-            K2_DLSPEC ~udp_transport ();
-
-            K2_DLSPEC int       get_desc () const;
-            K2_DLSPEC const transport_addr local_addr () const;
-
-            K2_DLSPEC size_t    write (const char* buf, size_t bytes, const transport_addr& remote_addr);
-
-            K2_DLSPEC size_t    read (char* buf, size_t bytes, transport_addr& remote_addr);
-            K2_DLSPEC size_t    read (char* buf, size_t bytes, transport_addr& remote_addr, const time_span& timeout);
-
-
-        private:
-            socket_desc m_desc;
-        };
-
-    }   //  namespace k2
+        void acquire ()
+        {
+            m_impl.acquire();
+        }
+        bool acquire (const timestamp& timer)
+        {
+            m_impl.acquire(timer);
+        }
+        void release ()
+        {
+            m_impl.release();
+        }
+    };
 
 }   //  namespace k2
 
-#endif  //  !K2_IPV4_UDP_H
+#endif  //  !K2_FAST_LOCK_H

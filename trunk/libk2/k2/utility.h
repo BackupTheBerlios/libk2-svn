@@ -28,59 +28,67 @@
     ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
     POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef K2_IPV4_UDP_H
-#define K2_IPV4_UDP_H
+#ifndef K2_UTILITY_H
+#define K2_UTILITY_H
 
 #ifndef K2_CONFIG_H
 #   include <k2/config.h>
 #endif
-#ifndef K2_IPV4_ADDR_H
-#   include <k2/ipv4_addr.h>
-#endif
-#ifndef K2_SOCKET_H
-#   include <k2/socket.h>
-#endif
-#ifndef K2_COPY_BOUNCER_H
-#   include <k2/copy_bouncer.h>
-#endif
+
+#include <cwchar>
+
+namespace std
+{
+    template <typename char_, typename char_traits_, typename alloc_>
+    class basic_string;
+    template <typename char_>
+    struct char_traits;
+    template <typename value_, typename alloc_>
+    class vector;
+    template <typename value_, typename alloc_>
+    class deque;
+    template <typename value_, typename alloc_>
+    class list;
+}
 
 namespace k2
 {
+    template <typename value_>
+    class local_allocator;
 
-    /** \defgroup   Networking
-    */
-    namespace ipv4
+    template <typename char_, template <typename> class alloc_>
+    struct make_string
     {
+        typedef std::basic_string<
+            char_,
+            std::char_traits<char_>,
+            alloc_<char_> >
+            type;
+    };
 
-        /*  \ingroup    Networking
-        */
-        class udp_transport
-        {
-        public:
-            K2_INJECT_COPY_BOUNCER();
+    typedef make_string<char, local_allocator>::type
+        local_string;
+    typedef make_string<wchar_t, local_allocator>::type
+        local_wstring;
 
-            static const size_t io_error = size_t(-1);
+    template <typename value_>
+    struct make_local_vector
+    {
+        typedef std::vector<
+            value_,
+            local_allocator<value_> >
+            type;
+    };
 
-            K2_DLSPEC explicit udp_transport (const transport_addr& local_addr);
-            K2_DLSPEC explicit udp_transport (const transport_addr& local_addr, const transport_addr& remote_addr);
-            K2_DLSPEC explicit udp_transport (int udp_desc, bool own);
-            K2_DLSPEC ~udp_transport ();
-
-            K2_DLSPEC int       get_desc () const;
-            K2_DLSPEC const transport_addr local_addr () const;
-
-            K2_DLSPEC size_t    write (const char* buf, size_t bytes, const transport_addr& remote_addr);
-
-            K2_DLSPEC size_t    read (char* buf, size_t bytes, transport_addr& remote_addr);
-            K2_DLSPEC size_t    read (char* buf, size_t bytes, transport_addr& remote_addr, const time_span& timeout);
-
-
-        private:
-            socket_desc m_desc;
-        };
-
-    }   //  namespace k2
+    template <typename value_>
+    struct make_local_deque
+    {
+        typedef std::deque<
+            value_,
+            local_allocator<value_> >
+            type;
+    };
 
 }   //  namespace k2
 
-#endif  //  !K2_IPV4_UDP_H
+#endif  //  !K2_UTILITY_H

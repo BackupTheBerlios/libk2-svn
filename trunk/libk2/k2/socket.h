@@ -28,11 +28,17 @@
     ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
     POSSIBILITY OF SUCH DAMAGE.
 */
-#ifndef K2_SOCKET_ERROR_H
-#define K2_SOCKET_ERROR_H
+#ifndef K2_SOCKET_H
+#define K2_SOCKET_H
 
 #ifndef K2_CONFIG_H
 #   include <k2/config.h>
+#endif
+#ifndef K2_NET_H
+#   include <k2/net.h>
+#endif
+#ifndef K2_COPY_BOUNCER_H
+#   include <k2/copy_bouncer.h>
 #endif
 #ifndef K2_EXCEPTION_H
 #   include <k2/exception.h>
@@ -41,8 +47,32 @@
 namespace k2
 {
 
-    /** \defgroup   Networking
-    */
+    class socket_desc
+    {
+    public:
+        K2_INJECT_COPY_BOUNCER();
+
+        enum family_enum
+        {
+            family_ipv4,
+            family_ipv6
+        };
+        enum type_enum
+        {
+            type_dgram,
+            type_stream
+        };
+
+        K2_DLSPEC socket_desc (family_enum, type_enum);
+        K2_DLSPEC socket_desc (int get, bool own);
+        K2_DLSPEC virtual ~socket_desc ();
+
+        K2_DLSPEC int     get () const;
+
+    private:
+        int         m_desc;
+        bool        m_own;
+    };
 
     /*  \ingroup    Networking
     */
@@ -97,19 +127,14 @@ namespace k2
     };
     /*  \ingroup    Networking
     */
-    struct socket_tcp_io_error : runtime_error, socket_errno
+    struct socket_connection_error : runtime_error, socket_errno
     {
-        explicit socket_tcp_io_error (const char* what = "k2::socket_tcp_io_error")
+        explicit socket_connection_error (const char* what = "k2::socket_connection_error")
             :   runtime_error(what) {};
     };
     /*  \ingroup    Networking
     */
-    struct socket_udp_io_error : runtime_error, socket_errno
-    {
-        explicit socket_udp_io_error (const char* what = "k2::socket_udp_io_error")
-            :   runtime_error(what) {};
-    };
 
 }   //  namespace k2
 
-#endif  //  !K2_SOCKET_ERROR_H
+#endif  //  !K2_SOCKET_H

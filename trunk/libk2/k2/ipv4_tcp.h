@@ -37,6 +37,9 @@
 #ifndef K2_IPV4_ADDR_H
 #   include <k2/ipv4_addr.h>
 #endif
+#ifndef K2_SOCKET_H
+#   include <k2/socket.h>
+#endif
 #ifndef K2_COPY_BOUNCER_H
 #   include <k2/copy_bouncer.h>
 #endif
