@@ -28,7 +28,7 @@
  */
 #include <k2/runtime.h>
 
-#include <k2/bits/spin_lock.h>
+#include <k2/spin_lock.h>
 #include <exception>
 
 namespace

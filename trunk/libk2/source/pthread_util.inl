@@ -26,49 +26,31 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <k2/atomic.h>
+#ifndef K2_BITS_PTHREAD_UTIL_INL
+#define K2_BITS_PTHREAD_UTIL_INL
 
-#if !defined(__GUNC__)
+#include <k2/scoped_guard.h>
+#include <cassert>
+#include <pthread.h>
 
-#   if !defined(WIN32)
-#       include <pthread.h>
-    namespace
+namespace k2
+{
+
+    struct ptmtx_guard
     {
-        pthread_mutex_t local_mtx = PTHREADS_MUTEX_INITIALIZER;
-    }
+        pthread_mutex_t& m_lock;
+        ptmtx_guard (pthread_mutex_t& lock)
+        :   m_lock(lock)
+        {
+            int ret = pthread_mutex_lock(&m_lock);
+            assert(ret == 0);
+        }
+        ~ptmtx_guard ()
+        {
+            pthread_mutex_unlock(&m_lock);
+        }
+    };
 
+}   //  namespace k2
 
-    bool k2::atomic_increase (k2::atomic_int_t& value) throw ()
-    {
-        bool ret;
-        pthread_mutex_lock(&local_mtx);
-        ret = ++value;
-        pthread_mutex_unlock(&local_mtx);
-        return  ret;
-    }
-
-    bool k2::atomic_decrease (k2::atomic_int_t& value) throw ()
-    {
-        bool ret;
-        pthread_mutex_lock(&local_mtx);
-        ret = --value;
-        pthread_mutex_unlock(&local_mtx);
-        return  ret;
-    }
-
-#   else
-#       include <windows.h>
-
-    bool k2::atomic_increase (k2::atomic_int_t& value) throw ()
-    {
-        return  ::InterlockedIncrement(
-            reinterpret_cast<volatile long*>(&value)) == 0 ? false : true;
-    }
-    bool k2::atomic_decrease (k2::atomic_int_t& value) throw ()
-    {
-        return  ::InterlockedDecrement(
-            reinterpret_cast<volatile long*>(&value)) == 0 ? false : true;
-    }
-#   endif
-
-#endif
+#endif  //  !K2_BITS_PTHREAD_UTIL_INL

@@ -26,8 +26,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <k2/bits/auto_alloc.h>
-#include <k2/bits/pool_alloc.h>
+#include <k2/auto_alloc.h>
+#include <k2/pool_alloc.h>
 #include <k2/memory.h>
 
 #if !defined(K2_INLINE_AUTO_ALLOC)

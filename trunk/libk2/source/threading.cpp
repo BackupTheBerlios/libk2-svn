@@ -28,7 +28,7 @@
  */
 #include <k2/thread.h>
 
-#include <k2/bits/spin_lock.h>
+#include <k2/spin_lock.h>
 #include <k2/thread_once.h>
 #include <k2/mutex.h>
 #include <k2/cond_var.h>
