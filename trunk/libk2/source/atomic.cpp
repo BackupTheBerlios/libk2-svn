@@ -30,7 +30,7 @@
 #elif defined(K2_HAS_WIN32_API)
 #   include <windows.h>
 #else
-#   error   "How to perform atomic operation???"
+#   error   "libk2: how to perform atomic operation???"
 #endif  //  K2_HAS_WIN32_API
 
 namespace k2

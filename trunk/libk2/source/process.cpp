@@ -32,7 +32,7 @@
 #   define  K2_STD_H_MEMORY
 #endif
 
-#if defined(K2_RT_GLIBC)
+#if defined(K2_RT_POSIX)
 //  These headers don't need to be guarded,
 //  because they are platform dependent,
 //  therefore would not be included by any k2 headers.
@@ -40,7 +40,7 @@
 #   include <unistd.h>
 #   include <sys/wait.h>
 #   include <ctype.h>
-#endif  //  K2_RT_GLIBC
+#endif  //  K2_RT_POSIX
 
 #if defined(K2_RT_MSVCRT)
 //  Same here, platform dependent.
@@ -58,10 +58,10 @@ namespace k2
         class process_impl
         {
         private:
-#if defined(K2_RT_GLIBC)
+#if defined(K2_RT_POSIX)
             typedef ::pid_t     native_id_t;
             typedef native_id_t native_handle_t;
-#endif  //  K2_RT_GLIBC
+#endif  //  K2_RT_POSIX
 #if defined(K2_RT_MSVCRT)
             typedef ::DWORD     native_id_t;
             typedef ::HANDLE    native_handle_t;
@@ -96,7 +96,7 @@ namespace k2
         //  static
         auto_ptr<process_impl> process_impl::create (const string& filename, const string& cmdline, bool detached_state)
         {
-#if defined(K2_RT_GLIBC)
+#if defined(K2_RT_POSIX)
             native_id_t pid = ::fork();
 
             if (pid == 0)
@@ -135,7 +135,7 @@ namespace k2
                 else
                     return  auto_ptr<process_impl>(new process_impl(pid, pid));
             }
-#endif  //  K2_RT_GLIBC
+#endif  //  K2_RT_POSIX
 
 #if defined(K2_RT_MSVCRT)
             STARTUPINFO         sinf;
@@ -193,9 +193,9 @@ namespace k2
         //  static
         void process_impl::join_and_destroy (auto_ptr<process_impl> impl_ap)
         {
-#if defined(K2_RT_GLIBC)
+#if defined(K2_RT_POSIX)
             ::waitpid(impl_ap->m_id, 0, 0);
-#endif  //  K2_RT_GLIBC
+#endif  //  K2_RT_POSIX
 
 #if defined(K2_RT_MSVCRT)
             ::WaitForSingleObject(impl_ap->m_handle, INFINITE);

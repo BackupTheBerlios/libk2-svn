@@ -74,9 +74,21 @@
 #   error   "Unknown compiler!!!"
 #endif
 
+
+//
+//  K2_HAS_XXXX_API macros are used to assert if target supports some certain APIs.
+//  K2_RT_XXXX macros are used to assert if target has the required runtime library.
+//
+//  Note that in some scenaios, both K2_HAS_POSIX_API and K2_HAS_WIN32_API are defined.
+//  In these cases, some WIN32 APIs are actually masked by POSIX APIs, including
+//  headers and functions.
+//
+//  Try to avoid using macros for OSes, it offten implies greater impact to portability.
+//  If you can, use macros for APIs and runtime libraries instead.
+//
 #if defined(K2_OS_LINUX)
 #   define  K2_HAS_POSIX_API
-#   define  K2_RT_GLIBC
+#   define  K2_RT_POSIX
 #elif defined(K2_OS_MINGW32)
 #   define  K2_HAS_POSIX_API
 #   define  K2_HAS_WIN32_API
@@ -84,10 +96,10 @@
 #elif defined(K2_OS_CYGWIN)
 #   define  K2_HAS_POSIX_API
 #   define  K2_HAS_WIN32_API
-#   define  K2_RT_GLIBC
+#   define  K2_RT_POSIX
 #elif defined(K2_OS_UNIX)
 #   define  K2_HAS_POSIX_API
-#   define  K2_RT_GLIBC
+#   define  K2_RT_POSIX
 #elif defined(K2_OS_WIN32)
 #   define  K2_HAS_WIN32_API
 #   define  K2_RT_MSVCRT

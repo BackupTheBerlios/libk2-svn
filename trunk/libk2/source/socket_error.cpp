@@ -20,9 +20,13 @@
 */
 #include <k2/socket_error.h>
 
-#if defined(K2_RT_MSVCRT)
-#   include <winsock2.h>
-#   pragma warning (disable : 4800) //  what is this for???
+#if !defined(K2_HAS_POSIX_API)
+#   if defined(K2_HAS_WIN32_API)
+#       include <winsock2.h>
+#       pragma warning (disable : 4800) //  what is this for???
+#   else
+#       error   "libk2: How to map error codes?"
+#   endif
 #endif
 
 #ifndef K2_ERRNO_H
@@ -47,7 +51,7 @@ namespace k2
                 err -= 10000;
                 break;
             case WSAEWOULDBLOCK:
-                err = EWOULDBLOCK;
+                err = EAGAIN;   //  same thing as EWOULDBLOCK, see <k2/errno.h>
                 break;
         }
         return  err;

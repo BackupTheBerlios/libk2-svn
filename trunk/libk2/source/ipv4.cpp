@@ -46,7 +46,7 @@
 #   include <iostream>
 #endif
 
-#ifdef K2_RT_GLIBC
+#ifdef K2_HAS_POSIX_API
 #   include <sys/socket.h>
 #   include <netinet/in.h>
 #   include <arpa/inet.h>
@@ -55,13 +55,13 @@
 #   include <unistd.h>
 #   include <netdb.h>
 #   include <fcntl.h>
-#elif defined(K2_OS_WIN32)
+#elif defined(K2_HAS_WIN32_API)
 #   include <winsock2.h>
 #   pragma warning (disable : 4800) //  what for???
     typedef int socklen_t;
 #else
-#   error   "How do I include socket header(s)?"
-#endif  //  K2_RT_MSVCRT
+#   error   "libk2: How to include socket header(s)?"
+#endif
 
 namespace k2
 {
@@ -70,7 +70,7 @@ namespace k2
     {
 
         void socket_set_nb (int desc, bool nb)
-    #if defined(K2_RT_GLIBC)
+#if defined(K2_HAS_POSIX_API)
         {
             int flags = fcntl(desc, F_GETFL, 0);
             if (flags != -1 && nb)
@@ -84,12 +84,12 @@ namespace k2
                 fcntl(desc, F_SETFL, flags);
             }
         }
-    #else
+#else
         {
             u_long  on = (nb ? 1 : 0);
             ioctlsocket(desc, FIONBIO, &on);
         }
-    #endif
+#endif
         struct socket_nb
         {
             socket_nb (int desc)
@@ -113,15 +113,15 @@ namespace k2
             return  desc;
         }
         void    socket_close (int desc)
-    #if defined(K2_RT_GLIBC)
+#if defined(K2_HAS_POSIX_API)
         {
             close(desc);
         }
-    #else
+#else
         {
             closesocket(desc);
         }
-    #endif
+#endif
         enum wait_opt
         {
             wait_read,
@@ -162,9 +162,13 @@ namespace k2
         }
         bool socket_wait2 (int desc, wait_opt opt, time_span& timeout)
         {
-    #if !defined(K2_OS_LINUX)
+#if !defined(K2_OS_LINUX)
+            //  See
+            //  man 2 select
+            //  in Linux man page.
+            //  For select() behaves different from other platforms.
             timestamp   pre_wait;
-    #endif  //  !GNU
+#endif  //  !GNU
 
             fd_set  fds;
             FD_ZERO(&fds);
@@ -198,16 +202,16 @@ namespace k2
             }
             else
             {
-    #if defined(K2_OS_LINUX)
+#if defined(K2_OS_LINUX)
                 timeout = time_span(tv.tv_sec * 1000 + tv.tv_usec / 1000);
-    #else
+#else
                 timestamp now;
                 time_span waited = now - pre_wait;
                 if (waited > timeout)
                     timeout = time_span(0);
                 else
                     timeout -= waited;
-    #endif
+#endif
                 return  true;
             }
         }
@@ -273,20 +277,46 @@ namespace k2
             const sockaddr_in   sa = remote_addr;
             if (connect(desc, (const sockaddr*)(&sa), sizeof(sa)) == -1)
             {
-                if (socket_errno::get_last() != EWOULDBLOCK)
+#if defined(K2_HAS_POSIX_API)
+                static const int connect_in_progress = EINPROGRESS;
+#endif
+
+#if defined(K2_HAS_WIN32_API)
+                static const int connect_in_progress = EWOULDBLOCK;
+#endif
+                if (socket_errno::get_last() != connect_in_progress)
                 {
-                    socket_close(desc);
-                    throw   socket_connect_error();
+                    goto NONBLOCK_CONNECT_ERROR;
                 }
                 else
                 {
                     if (socket_wait(desc, wait_write, timeout) == false)
-                    {
-                        socket_close(desc);
-                        throw   socket_timedout_error();
-                    }
+                        goto NONBLOCK_CONNECT_ERROR;
+
+#if defined(K2_HAS_POSIX_API)
+                    int         so_error;
+                    socklen_t   len = sizeof(so_error);
+                    if (getsockopt(desc, SOL_SOCKET, SO_ERROR, &so_error, &len) != 0)
+                        goto NONBLOCK_CONNECT_ERROR;
+
+                    if (so_error != 0)
+                        goto NONBLOCK_CONNECT_ERROR;
+#endif
+
+#if defined(K2_HAS_WIN32_API)
+                    if (connect(desc, (const sockaddr*)(&sa), sizeof(sa)) != EISCONN)
+                        goto NONBLOCK_CONNECT_ERROR;
+#endif
                 }
             }
+
+            //  Successful return
+            return;
+
+            //  Errorous return
+            NONBLOCK_CONNECT_ERROR:
+                socket_close(desc);
+                throw   socket_connect_error();
         }
         size_t tcp_write (int tcp_desc, const char* buf, size_t bytes)
         {

@@ -36,8 +36,11 @@
 //  For those already defined in <cerrno>, the values in
 //  cerrno are used, for example WSAEFAULT is 10014 in
 //  <winsock2.h> but EFAULT is something else in <cerrno>,
-//  in these cases, libk2 stick with the standard
-//  <cerrno>.
+//  in these cases, libk2 sticks with the standard
+//  <cerrno>. These values are used to evaluate against
+//  return value of socket_error::gat_last(), to avoid
+//  using ugly WSAEXXXXXX macros and avoid clients' need
+//  to include <winsock2.h>
 
 /*  defined in <cerrno>
 #define EACCES          10013
