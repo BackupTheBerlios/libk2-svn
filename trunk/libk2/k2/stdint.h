@@ -25,6 +25,11 @@
 #   include <k2/config.h>
 #endif
 
+#ifndef K2_STD_H_CSTDDEF
+#   include <cstddef>
+#   define  K2_STD_H_CSTDDEF
+#endif
+
 namespace k2
 {
     //  Integer types define, a minimal set.
@@ -42,10 +47,6 @@ namespace k2
     typedef unsigned long long  uint64_t;
 
     typedef unsigned int        uint_t;
-
-#if defined(K2_COMPILER_GCC)
-    typedef unsigned int        size_t;
-#endif
 
 }   //  namespace k2
 

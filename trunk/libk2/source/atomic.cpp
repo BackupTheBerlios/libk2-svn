@@ -21,6 +21,7 @@
 #include <k2/atomic.h>
 
 #if defined(K2_OS_LINUX)
+#   include <bits/atomicity.h>
 #   include <linux/config.h>
 #   if defined(CONFIG_SMP)
 #       define LOCK "acquire ; "
@@ -39,6 +40,10 @@ namespace k2
     bool atomic_increase (atomic_int_t& value) throw ()
 #   if defined(K2_OS_LINUX)
     {
+#if(1)
+        __exchange_and_add(&value, 1);
+        return  __exchange_and_add(&value, 0);
+#else
     /**
     * atomic_inc_and_test - increment and test
     * @v: pointer of type atomic_t
@@ -56,6 +61,7 @@ namespace k2
             :"=m" (value), "=qm" (c)
             :"m" (value) : "memory");
         return c != 0;
+#endif
     }
 #   else
     {
@@ -66,6 +72,10 @@ namespace k2
     bool atomic_decrease (atomic_int_t& value) throw ()
 #   if defined(K2_OS_LINUX)
     {
+#if(1)
+        __exchange_and_add(&value, -1);
+        return  __exchange_and_add(&value, 0);
+#else
     /**
     * atomic_dec_and_test - decrement and test
     * @v: pointer of type atomic_t
@@ -83,6 +93,7 @@ namespace k2
             :"=m" (value), "=qm" (c)
             :"m" (value) : "memory");
         return c != 0;
+#endif
     }
 #   else
     {

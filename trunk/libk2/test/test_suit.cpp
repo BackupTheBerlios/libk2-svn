@@ -27,6 +27,7 @@
 #include <k2/socket_error.h>
 #include <k2/singleton.h>
 
+#include <cstddef>
 #include <iostream>
 #include <cassert>
 
@@ -47,8 +48,8 @@ namespace test_threading
             tickers_interlaced
         };
         state_enum  m_state;
-        size_t      m_ticker1_ticks;
-        size_t      m_ticker2_ticks;
+        std::size_t      m_ticker1_ticks;
+        std::size_t      m_ticker2_ticks;
         spin_lock   m_lock;
 
         ticker_tracker ()
@@ -415,7 +416,6 @@ namespace test_process_singleton
         {
             singleton_ref ref;
             thread  th(ref);
-            int i = 0;
             ref();
         }
         assert(lifetime_tracker.m_passed = true);
@@ -436,7 +436,7 @@ namespace test_thread_local_singleton
         obj ()
         {
             printf("obj::obj()\n");
-            printf("%08I64X\n", (uint64_t)this);
+            printf("%08X\n", (int)this);
             //  See comments in destructor first.
             //  These are actually ok, just try to be consistant
             //  with destructor.
@@ -446,7 +446,7 @@ namespace test_thread_local_singleton
         ~obj ()
         {
             printf("obj::~obj()\n");
-            printf("%08I64X\n", (uint64_t)this);
+            printf("%08X\n", (int)this);
             //  Main thread's object apears to be deleted
             //  after C++ stdlib gets uninitialized.
             //  cout don't work here...
@@ -473,24 +473,28 @@ namespace test_thread_local_singleton
         singleton_ref   ref;
         {
             thread  th(ref);
-            int i = 0;
             ref();
         }
     }
 
 }   //  namespace test_thread_local_singleton
 
-void main ()
+int main ()
 {
+    atomic_int_t    v = 0;
+    printf("%d\n", atomic_increase(v));
+    printf("%d\n", atomic_decrease(v));
     //for (size_t cnt = 0; ; ++cnt)
     {
 
         //cout << "No: " << (int)cnt << endl;
         //test_thread_local_singleton::test();
-        test_process_singleton::test();
         test_udp::test();
-        test_tcp::test();
         test_timing::test();
+        test_process_singleton::test();
+        test_tcp::test();
         test_threading::test();
     }
+
+    return  0;
 }

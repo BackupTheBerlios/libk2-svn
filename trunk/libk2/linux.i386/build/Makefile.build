@@ -23,11 +23,12 @@
 
 .PHONY: all clean
 
-all: $(RULES) $(OBJS) $(BIN)/libk2.so.$(VER_MAJOR).$(VER_MINOR)
+all: $(RULES) $(OBJS) $(BIN)/libk2.so.$(VER_MAJOR).$(VER_MINOR) $(BIN)/test_suit
 
 clean:
 	@rm -f $(BIN)/*.o $(BIN)/*.rule $(BIN)/*.rule.*;\
-	rm -f $(BIN)/libk2.so*
+	rm -f $(BIN)/libk2.so* ;\
+	rm -f $(BIN)/test_suit
 
 
 $(BIN)/libk2.so.$(VER_MAJOR).$(VER_MINOR): $(OBJS)
@@ -47,3 +48,7 @@ $(BIN)/%.rule: $(SRC_ROOT)/%.cpp
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@ ;\
 	rm -f $@.$$$$ ;\
 	echo '	g++ -c  $< -o $(@:%.rule=%.o) $(CPPFLAGS)' >> $@
+
+$(BIN)/test_suit:   $(LIBK2_ROOT)/test/test_suit.cpp
+	g++ $(CPPFLAGS) $(LIBK2_ROOT)/test/test_suit.cpp -o $(BIN)/test_suit -L$(BIN) -lk2
+
