@@ -33,7 +33,7 @@
 #   include <k2/bits/copy_bouncer.h>
 #endif
 #ifndef K2_BITS_SCOPE_GUARD_H
-#   include <k2/bits/scope_guard.h>
+#   include <k2/bits/scoped_guard.h>
 #endif
 #ifndef K2_BITS_ATOMIC_H
 #   include <k2/bits/atomic.h>

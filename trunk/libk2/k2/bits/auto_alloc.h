@@ -34,13 +34,11 @@
 //  It's recommended to compile without K2_INLINE_AUTO_ALLOC first,
 //  to make sure user code does NOT depend on OS specific includes.
 //  After doing so, user could turn this option on if he/she needs it.
-#if defined(K2_INLINE_AUTO_ALLOC)
-#   ifndef  K2_BITS_COMPILER_H
-#       include <k2/bits/compiler.h>
-#   endif
-#   if defined(K2_COMPILER_MSVC)
+#if !defined(K2_INLINE_AUTO_ALLOC)
+#   include <k2/bits/os.h>
+#   if defined(K2_OS_WIN32)
 #       include <malloc.h>
-#   elif defined(K2_COMPILER_GCC)
+#   elif defined(K2_OS_UNIX)
 #       include <alloca.h>
 #   endif
 #endif
