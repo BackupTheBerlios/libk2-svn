@@ -1,4 +1,4 @@
-/*  libk2   Makefile
+/*  libk2   Makefile.build
 
     Copyright (C) 2003, 2004 Kenneth Chang-Hsing Ho.
 
@@ -19,19 +19,29 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+.PHONY: all clean
 
-include Makefile.conf
-
-.PHONY: all clean opt debug
-
-all:    opt debug
+all: $(RULES) $(OBJS) $(BIN)/libk2.so.$(VER_MAJOR).$(VER_MINOR)
 
 clean:
-	@make -f Makefile.opt clean ;\
-	make -f Makefile.debug clean
+	@rm -f $(OBJS) $(RULES) ;\
+	rm -f $(BIN)/libk2.so*
 
-opt:
-	@make -f Makefile.opt all
 
-debug:
-	@make -f Makefile.debug all
+$(BIN)/libk2.so.$(VER_MAJOR).$(VER_MINOR): $(OBJS)
+	@g++ $(LD_FLAGS) -shared -Wl,-soname,$(BIN)/libk2.so.$(VER_MAJOR) \
+	-o $(BIN)/libk2.so.$(VER_MAJOR).$(VER_MINOR) $^  $(LD_PATH:%=-L%) $(LIBRARIES:%=-l%) ;\
+	/sbin/ldconfig -n $(BIN) ;\
+	ln -sf $(BIN)/libk2.so.$(VER_MAJOR) $(BIN)/libk2.so
+
+#   Object files depend on rule files
+$(BIN)/%.o: $(BIN)/%.rule
+	@make -f $<
+
+#   Rule files depend on source files
+$(BIN)/%.rule: $(SRC_ROOT)/%.cpp
+	@set -e ; rm -f $@ ;\
+	g++ -MM $(CPPFLAGS) $< > $@.$$$$ ;\
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@ ;\
+	rm -f $@.$$$$ ;\
+	echo '	g++ -c  $< -o $(@:%.rule=%.o) $(CPPFLAGS)' >> $@

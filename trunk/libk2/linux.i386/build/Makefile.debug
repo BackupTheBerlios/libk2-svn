@@ -1,4 +1,4 @@
-/*  libk2   Makefile
+/*  libk2   Makefile.debug
 
     Copyright (C) 2003, 2004 Kenneth Chang-Hsing Ho.
 
@@ -19,19 +19,12 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-
 include Makefile.conf
 
-.PHONY: all clean opt debug
+RULES       = $(RULES_DEBUG)
+OBJS        = $(OBJS_DEBUG)
+BIN         = $(BIN_DEBUG)
+CPPFLAGS    = $(CPPFLAGS_DEBUG)
+LD_FLAGS    = $(LD_FLAGS_DEBUG)
 
-all:    opt debug
-
-clean:
-	@make -f Makefile.opt clean ;\
-	make -f Makefile.debug clean
-
-opt:
-	@make -f Makefile.opt all
-
-debug:
-	@make -f Makefile.debug all
+include Makefile.build
