@@ -1,0 +1,19 @@
+
+include Makefile.param
+
+DEPS = $(SRCS:$(SRC_ROOT)/%.cpp=%.d)
+
+all:    $(DEPS)
+.PHONY: all
+
+clean:
+	@rm -f $(DEPS)
+
+%.d:      $(SRC_ROOT)/%.cpp
+	@set -e; rm -f $@; \
+	$(CC) -MM $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+
+
