@@ -31,22 +31,21 @@
 #include <k2/memory.h>
 
 #if !defined(K2_INLINE_AUTO_ALLOC)
-#   include <k2/bits/os.h>
-#   if defined(K2_OS_WIN32)
-#       include <malloc.h>
-#   elif defined(K2_OS_UNIX)
+#   if !defined(WIN32)
 #       include <alloca.h>
+#   else
+#       include <malloc.h>
 #   endif
 #endif
 
 #if !defined(K2_INLINE_AUTO_ALLOC)
 
-    void* k2::auto_alloc (size_t bytes)
-    {
-        return  alloca(bytes);
-    }
+    //void* k2::bits::auto_alloc (size_t bytes)
+    //{
+        //return  alloca(bytes);
+    //}
 
-    k2::shared_pool<128, 128>::allocator<int>   alloc;
+    k2::shared_pool<128, 128>::allocator<int>::type   alloc;
 
     void foo ()
     {

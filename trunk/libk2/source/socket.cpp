@@ -28,9 +28,7 @@
  */
 #include <k2/socket.h>
 
-#include <k2/bits/os.h>
-
-#if defined(K2_OS_UNIX)
+#if !defined(WIN32)
 //  !kh! need to get rid of unused headers
 #   include <sys/socket.h>
 #   include <netinet/in.h>
@@ -40,20 +38,18 @@
 #   include <unistd.h>
 #   include <netdb.h>
 #   include <fcntl.h>
-#elif defined(K2_OS_WIN32)
+#else
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
 #   pragma warning (disable : 4800) //  what for???
     typedef int socklen_t;
-#else
-#   error   "libk2: Manual attention required."
 #endif
 
 k2::socket_desc::~socket_desc ()
 {
     if(m_own)
     {
-#if !defined(K2_OS_WIN32)
+#if !defined(WIN32)
         //  Generic
         close(m_desc);
 #else
@@ -88,21 +84,13 @@ k2::socket_desc::socket_desc (int get, bool own)
 }
 
 
-#if !defined(K2_HAS_POSIX_API)
-#   if defined(K2_OS_WIN32)
-#       include <winsock2.h>
-#       pragma warning (disable : 4800) //  what is this for???
-#   else
-#       error   "libk2: How to map error codes?"
-#   endif
-#endif
-
 #ifndef K2_ERRNO_H
 #   include <k2/errno.h>
 #endif
 
-#if defined(K2_RT_MSVCRT)
-
+#if defined(WIN32)
+#   include <winsock2.h>
+#   pragma warning (disable : 4800) //  what is this for???
 int
 k2::socket_errno::get_last ()
 {
@@ -122,14 +110,10 @@ k2::socket_errno::get_last ()
     }
     return  err;
 }
-
 #else
-
 int
 k2::socket_errno::get_last ()
 {
     return  errno;
 }
-
 #endif
-

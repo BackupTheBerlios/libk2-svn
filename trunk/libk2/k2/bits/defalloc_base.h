@@ -51,7 +51,8 @@ namespace k2
 
         size_type   max_size () const
         {
-            return  size_type(-1) / safe_alignof<sizeof(value_type)>::value;
+            return  safe_alignof::constant<sizeof(value_type)>::value>::value > size_type(-1) ?
+                size_type(-1) / safe_alignof<sizeof(value_type)>::value : 1;
         }
         void construct (pointer p, const_reference v)
         {

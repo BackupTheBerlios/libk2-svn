@@ -29,9 +29,82 @@
 #ifndef K2_MEMORY_H
 #define K2_MEMORY_H
 
+#ifndef K2_BITS_AUTO_ALLOC_H
+#   include <k2/bits/auto_alloc.h>
+#endif
+
 namespace k2
 {
 
+    /**
+    *   \brief A Standard Allocator-compliant class template.
+    *
+    *   Its first template parameter \b ValueT has the same sematic
+    *   meaning of the first template parameter of std::allocator class tmeplate.
+    *
+    *   Allocations made through object instances of auto_allocator<> are on
+    *   the stack-frame.
+    *   This is probably close to the fastest allocation avaiable (if not the
+    *   fastest). Only use it when you need extream performance and know what
+    *   "allocation on the stack" means and its consequences.
+    */
+    template <typename ValueT>
+    class auto_allocator
+    :   public defalloc_base<ValueT>
+    {
+    public:
+        template <typename OtherT>
+        struct rebind
+        {
+            typedef auto_allocator<OtherT>  other;
+        };
+
+        auto_allocator () {}
+        auto_allocator (const auto_allocator<ValueT>&) {}
+        template <typename OtherT>
+        auto_allocator (const auto_allocator<OtherT>&) {}
+        ~auto_allocator () {}
+
+        template <typename OtherT>
+        auto_allocator& operator= (const auto_allocator<OtherT>&)
+        {
+            return  *this;
+        }
+
+        pointer allocate (size_type count, const void* hint = 0)
+        {
+            return  reinterpret_cast<pointer>(bits::auto_alloc(sizeof(ValueT) * count));
+        }
+        void deallocate (pointer p, size_type n)
+        {
+            //  no-op.
+        }
+    };
+    template <>
+    class auto_allocator<void>
+    :   public defalloc_base<void>
+    {
+    public:
+        template <typename OtherT>
+        struct rebind
+        {
+            typedef auto_allocator<OtherT>  other;
+        };
+    };
+    template <typename LhsT, typename RhsT>
+    bool operator== (const auto_allocator<LhsT>&, const auto_allocator<RhsT>&)
+    {
+        return  true;
+    }
+    template <typename LhsT, typename RhsT>
+    bool operator!= (const auto_allocator<LhsT>&, const auto_allocator<RhsT>&)
+    {
+        return  false;
+    }
+
+
+
+#if(0)
     template <typename type_>
     struct destroyer
     {
@@ -44,6 +117,7 @@ namespace k2
         }
         type_*  m_p;
     };
+    #endif
 
 }   //  namespace k2
 

@@ -35,9 +35,6 @@
 #ifndef K2_BITS_COPY_BOUNCER_H
 #   include <k2/bits/copy_bouncer.h>
 #endif
-#ifndef K2_MEMORY_H
-#   include <k2/memory.h>
-#endif
 #ifndef K2_STDINT_H
 #   include <k2/stdint.h>
 #endif

@@ -132,7 +132,7 @@ namespace k2
                 pchunk = pnext;
             }
         }
-        void* allocate ()
+        void* alloc ()
         {
             scoped_guard    guard(m_lock);
 
@@ -150,7 +150,7 @@ namespace k2
             m_frees = m_frees->pnext;
             return  pchunk;
         }
-        void deallocate (void* p)
+        void dealloc (void* p)
         {
             scoped_guard    guard(m_lock);
             this->deposit(p);
@@ -158,6 +158,230 @@ namespace k2
 
     };
 
+    template <
+        typename    ValueT
+    ,   size_t      ChunkCount
+    ,   size_t      ChunkBytes
+    ,   bool        ThreadSafe = true
+    ,   typename    InstanceTagT = void>
+    class shared_pool_allocator;
+
+
+    template <
+        size_t      ChunkCount
+    ,   size_t      ChunkBytes
+    ,   bool        ThreadSafe = true
+    ,   typename    InstanceTagT = void>
+    class shared_pool
+    {
+    public:
+        typedef mem_pool<ChunkCount, ChunkBytes, ThreadSafe>
+            pool_type;
+    private:
+        static pool_type    s_pool;
+        typedef shared_pool<
+            ChunkCount
+        ,   ChunkBytes
+        ,   ThreadSafe
+        ,   InstanceTagT>   self_type;
+
+    public:
+        static pool_type&    instance ()
+        {
+            return  shared_pool::s_pool;
+        }
+
+        template <typename ValueT>
+        struct allocator
+        {
+            typedef shared_pool_allocator<
+                ValueT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>   type;
+        };
+    };
+
+    //static
+    template <
+        size_t      ChunkCount
+    ,   size_t      ChunkBytes
+    ,   bool        ThreadSafe
+    ,   typename    InstanceTagT>
+    typename shared_pool<ChunkCount, ChunkBytes, ThreadSafe, InstanceTagT>::pool_type
+        shared_pool<ChunkCount, ChunkBytes, ThreadSafe, InstanceTagT>::s_pool;
+
+    template <
+        typename    ValueT
+    ,   size_t      ChunkCount
+    ,   size_t      ChunkBytes
+    ,   bool        ThreadSafe
+    ,   typename    InstanceTagT>
+    class shared_pool_allocator
+    :   public defalloc_base<ValueT>
+    {
+    private:
+        typedef shared_pool<
+                ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>   shared;
+
+    public:
+        template <typename OtherT>
+        struct rebind
+        {
+            typedef shared_pool_allocator<
+                OtherT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>   other;
+        };
+
+        shared_pool_allocator ()
+        {}
+        template <typename OtherT>
+        shared_pool_allocator (
+            const shared_pool_allocator<
+                OtherT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>&)
+        {}
+        template <typename OtherT>
+        shared_pool_allocator& operator= (
+            const shared_pool_allocator<
+                OtherT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>&)
+        {
+            return  *this;
+        }
+        ValueT* allocate (size_type n, void* /*hint*/ = 0)
+        {
+            size_type   bytes = sizeof(ValueT) * n;
+
+            if(K2_OPT_BRANCH_FALSE(bytes > ChunkBytes))
+            {
+                return  reinterpret_cast<ValueT*>(::operator new(bytes));
+            }
+
+            return  reinterpret_cast<ValueT*>(shared::instance().alloc());
+        }
+        void    deallocate (ValueT* p, size_type n)
+        {
+            size_type   bytes = sizeof(ValueT) * n;
+
+            if(K2_OPT_BRANCH_FALSE(bytes > ChunkBytes))
+            {
+                ::operator delete(p);
+            }
+
+            shared::instance().dealloc(p);
+        }
+    };
+
+    template <
+        size_t      ChunkCount
+    ,   size_t      ChunkBytes
+    ,   bool        ThreadSafe
+    ,   typename    InstanceTagT>
+    class shared_pool_allocator<
+        void
+    ,   ChunkCount
+    ,   ChunkBytes
+    ,   ThreadSafe
+    ,   InstanceTagT>
+    :   public defalloc_base<void>
+    {
+    public:
+        template <typename OtherT>
+        struct rebind
+        {
+            typedef shared_pool_allocator<
+                OtherT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>   other;
+        };
+
+        shared_pool_allocator ()
+        {}
+        template <typename OtherT>
+        shared_pool_allocator (
+            const shared_pool_allocator<
+                OtherT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>&)
+        {}
+        template <typename OtherT>
+        shared_pool_allocator& operator= (
+            const shared_pool_allocator<
+                OtherT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>&)
+        {
+            return  *this;
+        }
+    };
+
+    template <
+        typename    LhsT
+    ,   typename    RhsT
+    ,   size_t      ChunkCount
+    ,   size_t      ChunkBytes
+    ,   bool        ThreadSafe
+    ,   typename    InstanceTagT>
+    bool operator== (
+        const shared_pool_allocator<
+                LhsT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>&,
+        const shared_pool_allocator<
+                RhsT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>&)
+    {
+        return  true;
+    }
+    template <
+        typename    LhsT
+    ,   typename    RhsT
+    ,   size_t      ChunkCount
+    ,   size_t      ChunkBytes
+    ,   bool        ThreadSafe
+    ,   typename    InstanceTagT>
+    bool operator!= (
+        const shared_pool_allocator<
+                LhsT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>&,
+        const shared_pool_allocator<
+                RhsT
+            ,   ChunkCount
+            ,   ChunkBytes
+            ,   ThreadSafe
+            ,   InstanceTagT>&)
+    {
+        return  false;
+    }
+#if(0)
     template <
         size_t      ChunkCount
     ,   size_t      ChunkBytes
@@ -223,7 +447,7 @@ namespace k2
                     return  reinterpret_cast<ValueT*>(::operator new(bytes));
                 }
 
-                return  reinterpret_cast<ValueT*>(shared_pool::instance().allocate());
+                return  reinterpret_cast<ValueT*>(shared_pool::instance().alloc());
             }
             void    deallocate (ValueT* p, size_type n)
             {
@@ -234,7 +458,7 @@ namespace k2
                     ::operator delete(p);
                 }
 
-                shared_pool::instance().deallocate(p);
+                shared_pool::instance().dealloc(p);
             }
         };
 
@@ -278,6 +502,7 @@ namespace k2
     ,   typename    InstanceTagT>
     typename shared_pool<ChunkCount, ChunkBytes, ThreadSafe, InstanceTagT>::pool_type
         shared_pool<ChunkCount, ChunkBytes, ThreadSafe, InstanceTagT>::s_pool;
+#endif
 
 #if(0)
 

@@ -41,7 +41,7 @@ bool k2::runtime::is_dl ()
     return  k2_is_dl;
 }
 
-#if defined(K2_OS_WIN32)
+#if defined(WIN32)
 
 #   include <winsock2.h>
 #   include <windows.h>
@@ -90,8 +90,9 @@ bool k2::runtime::is_dl ()
         return TRUE;
     }
 
-#endif  //  K2_OS_WIN32
+#endif  //  WIN32
 
+#if(0)
 //  !kh!
 //  cygwin port has not been maintained for a while,
 //  might be broken
@@ -118,8 +119,9 @@ bool k2::runtime::is_dl ()
     }
 
 #endif  //  K2_OS_CYGWIN
+#endif
 
-#if defined(K2_OS_LINUX)
+#if defined(__linux__)
 
     void __attribute__ ((constructor)) my_init ()
     {
@@ -130,7 +132,7 @@ bool k2::runtime::is_dl ()
         k2::runtime::fini();
     }
 
-#endif  //  K2_OS_LINUX
+#endif  //  __linux__
 
 #ifndef K2_STD_H_CSTDLIB
 #   include <cstdlib>

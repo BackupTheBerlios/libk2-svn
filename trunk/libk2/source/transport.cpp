@@ -59,10 +59,7 @@
 #   include <iostream>
 #endif
 
-#ifndef K2_BITS_OS_H
-#   include <k2/bits/os.h>
-#endif
-#if defined(K2_OS_UNIX)
+#if !defined(WIN32)
 //  !kh! need to get rid of unused headers
 #   include <sys/socket.h>
 #   include <netinet/in.h>
@@ -72,13 +69,11 @@
 #   include <unistd.h>
 #   include <netdb.h>
 #   include <fcntl.h>
-#elif defined(K2_OS_WIN32)
+#else
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
 #   pragma warning (disable : 4800) //  what for???
     typedef int socklen_t;
-#else
-#   error   "libk2: Manual attention required."
 #endif
 
 namespace
@@ -199,13 +194,13 @@ namespace   //  unnamed
     }
     bool socket_wait2 (int get, wait_opt opt, k2::time_span& timeout)
     {
-#if !defined(K2_OS_LINUX)
+#if !defined(__linux__)
         //  See
         //  man 2 select
         //  in Linux man page.
         //  For select() behaves different from other platforms.
         k2::timestamp   pre_wait;
-#endif  //  !GNU
+#endif  //  !__linux__
 
         fd_set  fds;
         FD_ZERO(&fds);
@@ -239,7 +234,7 @@ namespace   //  unnamed
         }
         else
         {
-#if defined(K2_OS_LINUX)
+#if defined(__linux__)
             //  Linux select() specific
             timeout = time_span(tv.tv_sec * 1000 + tv.tv_usec / 1000);
 #else

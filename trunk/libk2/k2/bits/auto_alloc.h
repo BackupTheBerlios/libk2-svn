@@ -29,17 +29,38 @@
 #ifndef K2_BITS_AUTO_ALLOC_H
 #define K2_BITS_AUTO_ALLOC_H
 
+#if defined(__GNUC__)
+#   include <alloca.h>
+#elif defined(_MSC_VER)
+#   include <malloc.h>
+#   if !defined(alloca)
+#       define  alloca  _alloca
+#   endif
+#endif
+
+namespace k2
+{
+    namespace bits
+    {
+        inline void* auto_alloc (size_t bytes)
+        {
+            return  alloca(bytes);
+        }
+    }
+
+}   //  namespace k2
+
+#if(0)
 //  Try to avoid including OS specific header,
 //  unless user option forcing.
 //  It's recommended to compile without K2_INLINE_AUTO_ALLOC first,
 //  to make sure user code does NOT depend on OS specific includes.
 //  After doing so, user could turn this option on if he/she needs it.
 #if !defined(K2_INLINE_AUTO_ALLOC)
-#   include <k2/bits/os.h>
-#   if defined(K2_OS_WIN32)
-#       include <malloc.h>
-#   elif defined(K2_OS_UNIX)
+#   if !defined(WIN32)
 #       include <alloca.h>
+#   else
+#       include <malloc.h>
 #   endif
 #endif
 
@@ -75,7 +96,7 @@ namespace k2
     /**
     *   \brief A Standard Allocator-compliant class template.
     *
-    *   Its first template parameter \b T has the same sematic
+    *   Its first template parameter \b ValueT has the same sematic
     *   meaning of the first template parameter of std::allocator class tmeplate.
     *
     *   Allocations made through object instances of auto_allocator<> are on
@@ -84,32 +105,32 @@ namespace k2
     *   fastest). Only use it when you need extream performance and know what
     *   "allocation on the stack" means and its consequences.
     */
-    template <typename T>
+    template <typename ValueT>
     class auto_allocator
-    :   public defalloc_base<T>
+    :   public defalloc_base<ValueT>
     {
     public:
-        template <typename other_T>
+        template <typename OtherT>
         struct rebind
         {
-            typedef auto_allocator<other_T>  other;
+            typedef auto_allocator<OtherT>  other;
         };
 
         auto_allocator () {}
-        auto_allocator (const auto_allocator<value_type>&) {}
-        template <typename other_T>
-        auto_allocator (const auto_allocator<other_T>&) {}
+        auto_allocator (const auto_allocator<ValueT>&) {}
+        template <typename OtherT>
+        auto_allocator (const auto_allocator<OtherT>&) {}
         ~auto_allocator () {}
 
-        template <typename other_T>
-        auto_allocator& operator= (const auto_allocator<other_T>&)
+        template <typename OtherT>
+        auto_allocator& operator= (const auto_allocator<OtherT>&)
         {
             return  *this;
         }
 
         pointer allocate (size_type count, const void* hint = 0)
         {
-            return  reinterpret_cast<pointer>(auto_alloc(sizeof(value_type) * count));
+            return  reinterpret_cast<pointer>(auto_alloc(sizeof(ValueT) * count));
         }
         void deallocate (pointer p, size_type n)
         {
@@ -121,23 +142,71 @@ namespace k2
     :   public defalloc_base<void>
     {
     public:
-        template <typename other_T>
+        template <typename OtherT>
         struct rebind
         {
-            typedef auto_allocator<other_T>  other;
+            typedef auto_allocator<OtherT>  other;
         };
     };
-    template <typename lhs_T, typename rhs_T>
-    bool operator== (const auto_allocator<lhs_T>&, const auto_allocator<rhs_T>&)
+    template <typename LhsT, typename RhsT>
+    bool operator== (const auto_allocator<LhsT>&, const auto_allocator<RhsT>&)
     {
         return  true;
     }
-    template <typename lhs_T, typename rhs_T>
-    bool operator!= (const auto_allocator<lhs_T>&, const auto_allocator<rhs_T>&)
+    template <typename LhsT, typename RhsT>
+    bool operator!= (const auto_allocator<LhsT>&, const auto_allocator<RhsT>&)
     {
         return  false;
     }
 
+#if(0)
+    template <typename ValueT, size_t MaxSize = 0>
+    class scoped_allocator
+    :   public defalloc_base<ValueT>
+    {
+    public:
+        template <typename OtherT>
+        struct rebind
+        {
+            typedef scoped_allocator<OtherT, MaxSize>  other;
+        };
+
+        scoped_allocator () {}
+        template <typename OtherT>
+        scoped_allocator (const scoped_allocator<OtherT, MaxSize>&) {}
+        ~scoped_allocator () {}
+
+        template <typename OtherT>
+        scoped_allocator& operator= (const scoped_allocator<OtherT, MaxSize>&)
+        {
+            return  *this;
+        }
+
+        pointer allocate (size_type count, const void* hint = 0)
+        {
+            size_type       total = count * sizeof(ValueT);
+            if(m_buffer[MaxSize] > m_next + total)
+            {
+                pointer         p = reinterpret_cast<pointer>(m_next);
+                safe_alignof<>  align;
+                m_next += align(total);
+                return  p;
+            }
+
+            throw   std::bad_alloc();
+        }
+        void deallocate (pointer p, size_type n)
+        {
+            //  no-op.
+        }
+
+    private:
+        char    m_buffer[MaxSize];
+        char*   m_next;
+    };
+#endif
+
 }   //  namespace k2
+#endif
 
 #endif  //  !K2_BITS_AUTO_ALLOC_H

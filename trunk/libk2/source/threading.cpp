@@ -32,15 +32,13 @@
 #include <k2/thread_once.h>
 #include <k2/mutex.h>
 #include <k2/cond_var.h>
-#include <k2/tls.h>
+#include <k2/tls_ptr.h>
 #include <k2/singleton.h>
 #include <k2/timing.h>
 #include <k2/assert.h>
 #include <k2/errno.h>
 
-#include <k2/bits/os.h>
-
-#if defined(K2_OS_UNIX)
+#if !defined(WIN32)
 #   include <unistd.h>  //  usleep
     namespace
     {
@@ -49,7 +47,7 @@
             ::usleep(msec * 1000);
         }
     }
-#elif defined(K2_OS_WIN32)
+#else
 #   include <windows.h>
     namespace
     {
@@ -58,7 +56,7 @@
             ::Sleep(DWORD(msec));
         }
     }
-#endif  //  K2_OS_UNIX
+#endif
 
 #include <pthread.h>
 #include <sched.h>

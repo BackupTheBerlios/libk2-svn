@@ -36,10 +36,7 @@
 #   include <k2/assert.h>
 #endif
 
-#ifndef K2_BITS_OS_H
-#   include <k2/bits/os.h>
-#endif
-#if defined(K2_OS_UNIX)
+#if !defined(WIN32)
 //  !kh! need to get rid of unused headers
 #   include <sys/socket.h>
 #   include <netinet/in.h>
@@ -49,13 +46,10 @@
 #   include <unistd.h>
 #   include <netdb.h>
 #   include <fcntl.h>
-#elif defined(K2_OS_WIN32)
+#else
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
-#   pragma warning (disable : 4800) //  what for???
     typedef int socklen_t;
-#else
-#   error   "libk2: Manual attention required."
 #endif
 
 //static

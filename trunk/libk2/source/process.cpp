@@ -36,19 +36,13 @@
 #   define  K2_STD_H_MEMORY
 #endif
 
-#ifndef K2_BITS_OS_H
-#   include <k2/bits/os.h>
-#endif
-
-#if defined(K2_OS_UNIX)
+#if !defined(WIN32)
 #   include <sys/types.h>
 #   include <unistd.h>
 #   include <sys/wait.h>
 #   include <ctype.h>
-#elif defined(K2_OS_WIN32)
-#   include <windows.h>
 #else
-#   error   "libk2: Manual attention required."
+#   include <windows.h>
 #endif
 
 namespace k2
@@ -65,10 +59,10 @@ namespace k2
             class process_impl
             {
             private:
-#if defined(K2_OS_UNIX)
+#if !defined(WIN32)
                 typedef ::pid_t     native_id_t;
                 typedef native_id_t native_handle_t;
-#elif defined(K2_OS_WIN32)
+#else
                 typedef ::DWORD     native_id_t;
                 typedef ::HANDLE    native_handle_t;
 #endif
@@ -107,7 +101,7 @@ namespace k2
             auto_ptr<process_impl> process_impl::create (
     	    const string& filename, const string& cmdline, bool detached_state)
             {
-#if defined(K2_OS_UNIX)
+#if !defined(WIN32)
                 native_id_t pid = ::fork();
 
                 if (pid == 0)
@@ -145,7 +139,7 @@ namespace k2
                     else
                         return  auto_ptr<process_impl>(new process_impl(pid, pid));
                 }
-#elif defined(K2_OS_WIN32)
+#else
                 STARTUPINFO         sinf;
                 memset(&sinf, 0, sizeof(sinf));
                 sinf.cb = sizeof(STARTUPINFO);
@@ -203,9 +197,9 @@ namespace k2
             //  static
             void process_impl::join_and_destroy (auto_ptr<process_impl> impl_ap)
             {
-#if defined(K2_OS_UNIX)
+#if !defined(WIN32)
                 ::waitpid(impl_ap->m_id, 0, 0);
-#elif defined(K2_OS_WIN32)
+#else
                 ::WaitForSingleObject(impl_ap->m_handle, INFINITE);
                 ::CloseHandle(impl_ap->m_handle);
 #endif

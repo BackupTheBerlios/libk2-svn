@@ -149,14 +149,6 @@
 				RelativePath=".\source\transport.cpp">
 			</File>
 		</Filter>
-		<Filter
-			Name="k2"
-			Filter="">
-			<Filter
-				Name="bits"
-				Filter="">
-			</Filter>
-		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

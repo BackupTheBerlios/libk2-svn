@@ -28,12 +28,10 @@
  */
 #include <k2/bits/atomic.h>
 
-#if defined(K2_ATOMIC_GLIBC)
-//  inlined....
+#if !defined(__GUNC__)
 
-#elif defined(K2_ATOMIC_PTHREADS)
-
-#   include <pthread.h>
+#   if !defined(WIN32)
+#       include <pthread.h>
     namespace
     {
         pthread_mutex_t local_mtx = PTHREADS_MUTEX_INITIALIZER;
@@ -58,9 +56,8 @@
         return  ret;
     }
 
-#elif defined(K2_ATOMIC_WIN32)
-
-#   include <windows.h>
+#   else
+#       include <windows.h>
 
     bool k2::atomic_increase (k2::atomic_int_t& value) throw ()
     {
@@ -72,6 +69,6 @@
         return  ::InterlockedDecrement(
             reinterpret_cast<volatile long*>(&value)) == 0 ? false : true;
     }
-
+#   endif
 
 #endif

@@ -27,14 +27,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <k2/timing.h>
-#include <k2/bits/os.h>
 
-#if defined(K2_OS_UNIX)
+#if !defined(WIN32)
 #   include <sys/time.h>
-#elif defined(K2_OS_WIN32)
-#   include <sys/timeb.h>
 #else
-#   error   "libk2: Unsupported OS."
+#   include <sys/timeb.h>
 #endif
 
 #include <source/pthread_util.inl>
@@ -45,20 +42,20 @@ namespace   //  unnamed
     static const k2::uint64_t   one_thousand    = 1000;
 
     inline k2::uint64_t os_timestamp ()
-#if defined(K2_OS_WIN32)
-    {
-        _timeb  tb;
-        _ftime( &tb );
-
-        return  (k2::uint64_t(tb.time) * one_thousand + tb.millitm );
-    }
-#elif defined(K2_HAS_POSIX_API)
+#if !defined(WIN32)
     {
         timeval tv;
         gettimeofday(&tv, NULL);
 
         return  (k2::uint64_t(tv.tv_sec) * one_thousand +
             tv.tv_usec / one_thousand);
+    }
+#else
+    {
+        _timeb  tb;
+        _ftime( &tb );
+
+        return  (k2::uint64_t(tb.time) * one_thousand + tb.millitm );
     }
 #endif
 

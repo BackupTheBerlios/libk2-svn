@@ -32,19 +32,6 @@
 #ifndef K2_BITS_DLSPEC_H
 #   include <k2/bits/dlspec.h>
 #endif
-#ifndef K2_BITS_OS_H
-#   include <k2/bits/os.h>
-#endif
-
-#if defined(K2_COMPILER_GCC)
-#   define  K2_ATOMIC_GLIBC
-#elif defined(K2_OS_UNIX)
-#   define  K2_ATOMIC_PTHREADS
-#elif defined(WIN32)
-#   define  K2_ATOMIC_WIN32
-#else
-#   error   "libk2: Need manual attention to do atomic arithmetic."
-#endif
 
 namespace k2
 {
@@ -52,7 +39,7 @@ namespace k2
 //  !kh!
 //  There are only two functions and a typedef in <bits/atomicity.h>.
 //  They are not typically used in user code. It's not likely to break anything.
-#if defined(K2_ATOMIC_GLIBC)
+#if defined(__GNUC__)
     namespace nonpublic
     {
 #       include <bits/atomicity.h>
@@ -69,7 +56,7 @@ namespace k2
     *   \brief  Increments (increases by one) \a value and
     *           test if \a value is non-zero atomically.
     */
-#if defined(K2_ATOMIC_GLIBC)
+#if defined(__GNUC__)
     inline bool atomic_increase (atomic_int_t& value) throw ()
     {
         nonpublic::__exchange_and_add(&value, 1);
@@ -85,7 +72,7 @@ namespace k2
     *   \brief  Decrements (decreases by one) \a value and
     *           test if \a value is non-zero atomically.
     */
-#if defined(K2_ATOMIC_GLIBC)
+#if defined(__GNUC__)
     inline bool atomic_decrease (atomic_int_t& value) throw ()
     {
         nonpublic::__exchange_and_add(&value, -1);

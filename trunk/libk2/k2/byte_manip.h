@@ -74,6 +74,26 @@ namespace k2
         }
     };
 
+#if(0)
+    template <size_t Bytes = 0, size_t Alignment = 8>
+    struct safe_alignof
+    {
+        static const size_t  value =
+            ((Bytes + Alignment - 1) & ~(Alignment - 1 ));
+    };
+
+    template <size_t Alignment>
+    struct safe_alignof<0, Alignment>
+    {
+        static const size_t default_aligment = 8;
+
+        size_t  operator() (size_t bytes)
+        {
+            return  ((size + Alignment - 1) & ~(Alignment - 1 ));
+        }
+    };
+#endif
+
 }   //  namespace k2
 
 #endif  //  !K2_BYTEMANIP_H
