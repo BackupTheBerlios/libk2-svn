@@ -29,12 +29,17 @@
 #   POSSIBILITY OF SUCH DAMAGE.
 #
 
-include Makefile.conf
+.PHONY: all clean
 
-DEPENDS     = $(DEPENDS_DEBUG)
-OBJS        = $(OBJS_DEBUG)
-BIN         = $(BIN_DEBUG)
-CPPFLAGS    = $(CPPFLAGS_DEBUG)
-LD_FLAGS    = $(LD_FLAGS_DEBUG)
+all: $(RULES) $(OBJS) $(BIN)/libk2.so.$(VER_MAJOR).$(VER_MINOR) $(BIN)/test_suit
 
-include Makefile.build
+clean:
+	@rm -f $(BIN)/*.d $(BIN)/*.d.*
+
+
+#   Dot-D files depend on source files
+$(BIN)/%.d: $(SRC_ROOT)/%.cpp
+	@set -e ; rm -f $@ ;\
+	g++ -MM $(CPPFLAGS) $< > $@.$$$$ ;\
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@ ;\
+	rm -f $@.$$$$
