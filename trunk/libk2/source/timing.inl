@@ -1,0 +1,3 @@
+
+int
+namespace k2
