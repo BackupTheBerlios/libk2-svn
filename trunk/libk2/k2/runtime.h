@@ -16,7 +16,7 @@
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
@@ -58,20 +58,20 @@ namespace k2
         static const prio_t prio_lowest       = INT_MIN + 1;
         static const prio_t prio_default      = 0;
 
-        template <typename functor0_>
-        static void atexit (functor0_ func, prio_t pri)
+        template <typename FuntionT>
+        static void atexit (FuntionT func, prio_t pri = prio_default)
         {
-            functor0_* arg = new functor0_(func);
-            void(*adapter)(void*) = runtime::adapter<functor0_>;
+            FuntionT* arg = new FuntionT(func);
+            void(*adapter)(void*) = runtime::adapter<FuntionT>;
             runtime::atexit_impl(adapter, (void*)arg, pri);
         }
 
     private:
         K2_DLSPEC static void atexit_impl (void (*adapter)(void*), void* function0, prio_t pri);
-        template <typename functor0_>
+        template <typename FuntionT>
         static void adapter (void* function0)
         {
-            std::auto_ptr<functor0_> functor0(reinterpret_cast<functor0_*>(function0));
+            std::auto_ptr<FuntionT> functor0(reinterpret_cast<FuntionT*>(function0));
             (*functor0)();
         }
     };

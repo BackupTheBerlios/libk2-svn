@@ -82,13 +82,13 @@ namespace k2
     *   For this reason you should not destroy a tls_ptr<> object until you are certain
     *   there are no threads running that have made use of its thread-specific data.
     */
-    template <typename type_>
+    template <typename InstanceT>
     class tls_ptr
     {
     public:
         K2_INJECT_COPY_BOUNCER();
 
-        typedef type_   value_type;
+        typedef InstanceT   value_type;
         /**
         *   Allocates resource for *this.
         *
@@ -101,35 +101,35 @@ namespace k2
         /**
         *   Retrieves the stored pointer.
         */
-        type_*      get () const
+        InstanceT*      get () const
         {
-            return  reinterpret_cast<type_*>(m_impl.get());
+            return  reinterpret_cast<InstanceT*>(m_impl.get());
         }
         /**
         *   Returns this->get().
         */
-        type_*      operator-> () const
+        InstanceT*      operator-> () const
         {
-            return  reinterpret_cast<type_*>(m_impl.get());
+            return  reinterpret_cast<InstanceT*>(m_impl.get());
         }
         /**
         *   Returns *(this->get()).
         */
-        type_&      operator* () const
+        InstanceT&      operator* () const
         {
             return  this->get();
         }
         /**
         *   Releases and returns ownership of stored pointer.
         */
-        type_*      release ()
+        InstanceT*      release ()
         {
-            return  reinterpret_cast<type_*>(this->release());
+            return  reinterpret_cast<InstanceT*>(m_impl.release());
         }
         /**
         *   Deletes stored pointer then take ownership of p.
         */
-        void    reset (type_* p = 0)
+        void    reset (InstanceT* p = 0)
         {
             return  m_impl.reset(p);
         }
@@ -137,7 +137,7 @@ namespace k2
     private:
         static void cleanup (void* p)
         {
-            type_*  pt = reinterpret_cast<type_*>(p);
+            InstanceT*  pt = reinterpret_cast<InstanceT*>(p);
             delete  pt;
         }
         nonpublic::tls_ptr_impl m_impl;
