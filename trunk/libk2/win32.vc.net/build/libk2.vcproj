@@ -122,10 +122,16 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath="..\..\source\assert.cpp">
+			</File>
+			<File
 				RelativePath="..\..\source\atomic.cpp">
 			</File>
 			<File
-				RelativePath="..\..\source\ipv4.cpp">
+				RelativePath="..\..\source\memory.cpp">
+			</File>
+			<File
+				RelativePath="..\..\source\net.cpp">
 			</File>
 			<File
 				RelativePath="..\..\source\process.cpp">
@@ -148,6 +154,9 @@
 			Filter="">
 			<File
 				RelativePath="..\..\k2\allocator.h">
+			</File>
+			<File
+				RelativePath="..\..\k2\array.h">
 			</File>
 			<File
 				RelativePath="..\..\k2\assert.h">
@@ -177,16 +186,22 @@
 				RelativePath="..\..\k2\exception.h">
 			</File>
 			<File
+				RelativePath="..\..\k2\fast_lock.h">
+			</File>
+			<File
 				RelativePath="..\..\k2\funtional.h">
 			</File>
 			<File
-				RelativePath="..\..\k2\ipv4.h">
+				RelativePath="..\..\k2\ipv4_addr.h">
 			</File>
 			<File
 				RelativePath="..\..\k2\ipv4_tcp.h">
 			</File>
 			<File
 				RelativePath="..\..\k2\ipv4_udp.h">
+			</File>
+			<File
+				RelativePath="..\..\k2\ipv6_addr.h">
 			</File>
 			<File
 				RelativePath="..\..\k2\math.h">
@@ -196,6 +211,9 @@
 			</File>
 			<File
 				RelativePath="..\..\k2\mutex.h">
+			</File>
+			<File
+				RelativePath="..\..\k2\net.h">
 			</File>
 			<File
 				RelativePath="..\..\k2\process.h">
@@ -217,9 +235,6 @@
 			</File>
 			<File
 				RelativePath="..\..\k2\stdint.h">
-			</File>
-			<File
-				RelativePath="..\..\k2\tcp_transport.h">
 			</File>
 			<File
 				RelativePath="..\..\k2\thread.h">

@@ -1,22 +1,32 @@
-/*  libk2   <k2/singleton.h>
+/*
+    Copyright (c) 2003, 2004, Kenneth Chang-Hsing Ho
+    All rights reserved.
 
-    Copyright (C) 2003, 2004 Kenneth Chang-Hsing Ho.
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
 
-    Written by Kenneth Chang-Hsing Ho <kenho@bluebottle.com>
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    * Neither the name of the k2 nor the names of its contributors may be used
+      to endorse or promote products derived from this software without
+      specific prior written permission.
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
 */
 #ifndef K2_SINGLETON_H
 #define K2_SINGLETON_H
@@ -57,11 +67,16 @@ namespace k2
     */
     struct singleton
     {
-        typedef runtime::atexit_prio_t  destroy_prio_t;
+        typedef int lifetime_t;
 
-        static const destroy_prio_t destroy_prio_highest    =   runtime::atexit_prio_highest;
-        static const destroy_prio_t destroy_prio_lowest     =   runtime::atexit_prio_lowest;
-        static const destroy_prio_t destroy_prio_default    =   runtime::atexit_prio_default;
+        static const lifetime_t lifetime_short = INT_MIN;
+        static const lifetime_t lifetime_long  = INT_MAX - 1;
+        static const lifetime_t lifetime_normal= 0;
+
+        static runtime::prio_t lifetime_to_atexit_prio(lifetime_t lifetime)
+        {
+            return  -lifetime;
+        }
     };
 
 
@@ -77,8 +92,8 @@ namespace k2
                 s_once;
             static instance_t_*
                 s_instance_ptr;
-            static singleton::destroy_prio_t
-                s_destroy_prio;
+            static singleton::lifetime_t
+                s_lifetime;
         };
         //  static
         template <typename owner_t_, typename instance_t_>
@@ -88,10 +103,10 @@ namespace k2
         instance_t_* singleton_holder<owner_t_, instance_t_>::s_instance_ptr = 0;
         //  static
         template <typename owner_t_, typename instance_t_>
-        singleton::destroy_prio_t   singleton_holder<owner_t_, instance_t_>::s_destroy_prio = 0;
+        singleton::lifetime_t   singleton_holder<owner_t_, instance_t_>::s_lifetime = 0;
 
 
-        template <typename owner_t_, typename instance_t_, singleton::destroy_prio_t destroy_prio_>
+        template <typename owner_t_, typename instance_t_, singleton::lifetime_t lifetime_>
         class singleton_impl : singleton_holder<owner_t_, instance_t_>
         {
         protected:
@@ -101,33 +116,33 @@ namespace k2
 
             typedef singleton_holder<owner_t_, instance_t_>
                 singleton_holder_type;
-            typedef singleton_impl<owner_t_, instance_t_, destroy_prio_>
+            typedef singleton_impl<owner_t_, instance_t_, lifetime_>
                 self_type;
         };
         //  static
-        template <typename owner_t_, typename instance_t_, singleton::destroy_prio_t destroy_prio_>
-        void singleton_impl<owner_t_, instance_t_, destroy_prio_>::instance_init ()
+        template <typename owner_t_, typename instance_t_, singleton::lifetime_t lifetime_>
+        void singleton_impl<owner_t_, instance_t_, lifetime_>::instance_init ()
         {
             std::auto_ptr<instance_t_>  sptr(new instance_t_());
             destroyer<instance_t_>      dtor(sptr.get());
 
-            runtime::atexit(dtor, destroy_prio_);
+            runtime::atexit(dtor, singleton::lifetime_to_atexit_prio(lifetime_));
 
             singleton_holder_type::s_instance_ptr = sptr.release();
-            singleton_holder_type::s_destroy_prio = destroy_prio_;
+            singleton_holder_type::s_lifetime = lifetime_;
         }
         //  static
-        template <typename owner_t_, typename instance_t_, singleton::destroy_prio_t destroy_prio_>
-        void singleton_impl<owner_t_, instance_t_, destroy_prio_>::instance_fini ()
+        template <typename owner_t_, typename instance_t_, singleton::lifetime_t lifetime_>
+        void singleton_impl<owner_t_, instance_t_, lifetime_>::instance_fini ()
         {
             delete  singleton_holder_type::s_instance_ptr;
         }
         //  static
-        template <typename owner_t_, typename instance_t_, singleton::destroy_prio_t destroy_prio_>
-        instance_t_& singleton_impl<owner_t_, instance_t_, destroy_prio_>::instance ()
+        template <typename owner_t_, typename instance_t_, singleton::lifetime_t lifetime_>
+        instance_t_& singleton_impl<owner_t_, instance_t_, lifetime_>::instance ()
         {
             singleton_holder_type::s_once.run(self_type::instance_init);
-            if (destroy_prio_ != singleton_holder_type::s_destroy_prio)
+            if (lifetime_ != singleton_holder_type::s_lifetime)
                 throw   critical_error("singleton<>::instance() is referenced with differnt destroy-priorities!!!");
 
             return  *singleton_holder_type::s_instance_ptr;
@@ -146,14 +161,14 @@ namespace k2
     *
     *   Also see class_singleton class template and thread_local_singleton class template .
     */
-    template <typename instance_t_, singleton::destroy_prio_t destroy_prio_ = singleton::destroy_prio_default>
+    template <typename instance_t_, singleton::lifetime_t lifetime_ = singleton::lifetime_normal>
     class process_singleton
-    :   nonpublic::singleton_impl<process_singleton<instance_t_, destroy_prio_>, instance_t_, destroy_prio_>
+    :   nonpublic::singleton_impl<process_singleton<instance_t_, lifetime_>, instance_t_, lifetime_>
     {
     private:
-        typedef process_singleton<instance_t_, destroy_prio_>
+        typedef process_singleton<instance_t_, lifetime_>
             self_type;
-        typedef nonpublic::singleton_impl<self_type, instance_t_, destroy_prio_>
+        typedef nonpublic::singleton_impl<self_type, instance_t_, lifetime_>
             impl_type;
 
     public:
@@ -182,12 +197,12 @@ namespace k2
     *
     *   Also see process_singleton class template and thread_local_singleton class template.
     */
-    template <typename owner_t_, typename instance_t_, singleton::destroy_prio_t destroy_prio_ = singleton::destroy_prio_default >
+    template <typename owner_t_, typename instance_t_, singleton::lifetime_t lifetime_ = singleton::lifetime_normal >
     class class_singleton
-    :   nonpublic::singleton_impl<owner_t_, instance_t_, destroy_prio_>
+    :   nonpublic::singleton_impl<owner_t_, instance_t_, lifetime_>
     {
     private:
-        typedef nonpublic::singleton_impl<owner_t_, instance_t_, destroy_prio_>
+        typedef nonpublic::singleton_impl<owner_t_, instance_t_, lifetime_>
             impl_type;
     public:
         /**
@@ -213,14 +228,14 @@ namespace k2
     *
     *   Also see process_singleton class template and class_singleton class template.
     */
-    template <typename instance_t_, singleton::destroy_prio_t destroy_prio_ = singleton::destroy_prio_default >
+    template <typename instance_t_, singleton::lifetime_t lifetime_ = singleton::lifetime_normal >
     class thread_local_singleton
-    :   nonpublic::singleton_impl<thread_local_singleton<instance_t_, destroy_prio_>, tls_ptr<instance_t_>, destroy_prio_>
+    :   nonpublic::singleton_impl<thread_local_singleton<instance_t_, lifetime_>, tls_ptr<instance_t_>, lifetime_>
     {
     private:
-        typedef thread_local_singleton<instance_t_, destroy_prio_>
+        typedef thread_local_singleton<instance_t_, lifetime_>
             self_type;
-        typedef nonpublic::singleton_impl<self_type, tls_ptr<instance_t_>, destroy_prio_>
+        typedef nonpublic::singleton_impl<self_type, tls_ptr<instance_t_>, lifetime_>
             impl_type;
 
     public:

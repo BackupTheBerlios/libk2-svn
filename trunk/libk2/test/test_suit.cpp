@@ -18,6 +18,7 @@
     License along with this library; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <k2/utility.h>
 #include <k2/thread.h>
 #include <k2/spin_lock.h>
 #include <k2/assert.h>
@@ -26,6 +27,7 @@
 #include <k2/ipv4_udp.h>
 #include <k2/socket_error.h>
 #include <k2/singleton.h>
+#include <k2/allocator.h>
 
 #include <cstddef>
 #include <iostream>
@@ -33,6 +35,7 @@
 
 using namespace std;
 using namespace k2;
+
 
 namespace test_threading
 {
@@ -234,10 +237,30 @@ namespace test_udp
     void test ()
     {
         using namespace ipv4;
+/*
+        std::vector<transport_addr> addrs1 = getaddrinfo(
+            type_tag<udp_transport>(),
+            false,
+            false,
+            local_string(""),
+            //local_string("localhost"),
+            local_string("7777"));
+        std::vector<transport_addr> addrs2 = getaddrinfo(
+            type_tag<udp_transport>(),
+            false,
+            false,
+            local_string(""),
+            local_string("7788"));
 
-        ip_addr localhost(127, 0, 0,1);
-        layer4_addr addr1(localhost, 7777);
-        layer4_addr addr2(localhost, 7778);
+        assert(addrs1.empty() == false);
+        assert(addrs2.empty() == false);
+
+        transport_addr  addr1 = addrs1.front();
+        transport_addr  addr2 = addrs2.front();
+*/
+
+        transport_addr  addr1(interface_addr::loopback, 7777);
+        transport_addr  addr2(interface_addr::loopback, 7788);
         udp_transport udp1(addr1);
         udp_transport udp2(addr2);
 
@@ -245,7 +268,7 @@ namespace test_udp
         char buf[sizeof(msg)] = "";
 
         udp1.write(msg, sizeof(msg), addr2);
-        layer4_addr from;
+        transport_addr from;
         udp2.read(buf, sizeof(buf), from);
         assert(from == addr1);
         assert(strcmp(buf, msg) == 0);
@@ -272,13 +295,21 @@ namespace test_tcp
     void test ()
     {
         using namespace ipv4;
+/*
+        std::vector<transport_addr> addrs = getaddrinfo(
+            type_tag<tcp_listener>(),
+            false,
+            local_string(""),
+            local_string("7777"));
 
-        ip_addr localhost(127, 0, 0,1);
-        layer4_addr addr(localhost, 7777);
+        assert(addrs.empty() == false);
+        transport_addr addr(addrs.front());
+*/
+        transport_addr addr(interface_addr::loopback, 7777);
         tcp_listener    listener(addr);
 
         tcp_transport   active_end(addr);   //  active open end
-        cout << "Test of tcp_tranport connetion establishment passed." << endl;
+        cout << "Test of tcp_transport connetion establishment passed." << endl;
         const char msg[] = "a message string";
         char buf[sizeof(msg)] = "";
         {
@@ -287,7 +318,7 @@ namespace test_tcp
             active_end.write_all(msg, sizeof(msg));
             passive_end.read_all(buf, sizeof(buf));
             assert(strcmp(msg, buf) == 0);
-            cout << "Test of tcp_tranport read/write passed." << endl;
+            cout << "Test of tcp_transport read/write passed." << endl;
 
             active_end.write_all(msg, sizeof(msg));
             bool timedout = false;
@@ -301,7 +332,7 @@ namespace test_tcp
             }
             assert(timedout == true);
 
-            cout << "Test of tcp_tranport timed read passed." << endl;
+            cout << "Test of tcp_transport timed read passed." << endl;
             //  How to test timed write???
 
             //  passive_end closes here
@@ -309,7 +340,7 @@ namespace test_tcp
 
         size_t ret = active_end.read(buf, sizeof(buf));
         assert(ret == 0);
-        cout << "Test of tcp_tranport implicit close passed." << endl;
+        cout << "Test of tcp_transport implicit close passed." << endl;
     }
 
 }   //  namespace test_tcp
@@ -400,13 +431,13 @@ namespace test_process_singleton
         {
             for (size_t cnt = 0; cnt < 1000; ++cnt)
             {
-                process_singleton<obj_tmpl<0>, singleton::destroy_prio_highest >::instance();
+                process_singleton<obj_tmpl<0>, singleton::lifetime_long>::instance();
                 assert(obj_tmpl<0>::constructed == true);
                 process_singleton<obj_tmpl<1> >::instance();
                 assert(obj_tmpl<1>::constructed == true);
                 process_singleton<obj_tmpl<2> >::instance();
                 assert(obj_tmpl<2>::constructed == true);
-                process_singleton<obj_tmpl<3>, singleton::destroy_prio_lowest >::instance();
+                process_singleton<obj_tmpl<3>, singleton::lifetime_short>::instance();
                 assert(obj_tmpl<3>::constructed == true);
             }
         }
@@ -479,6 +510,108 @@ namespace test_thread_local_singleton
 
 }   //  namespace test_thread_local_singleton
 
+#include <k2/memory.h>
+#include <k2/allocator.h>
+
+namespace test_allocator
+{
+    void test ()
+    {
+        static const size_t loop = 1000;
+        static const size_t cnt = 1000;
+        int*                array[cnt];
+        size_t idx = 0;
+        size_t i = 0;
+        {
+           static_pool<sizeof(int), false>    pool(cnt);
+            i = 0;
+
+            timestamp   start;
+            for (; i < loop; ++i)
+            {
+                idx = 0;
+                for(; idx < cnt; ++idx)
+                {
+                    array[idx] = reinterpret_cast<int*>(pool.allocate(sizeof(int)));
+                }
+                idx = 0;
+                for(; idx < cnt; ++idx)
+                {
+                    pool.deallocate(array[idx], sizeof(int));
+                }
+            }
+            cout << "Pool:" << endl;
+            cout << (timestamp::now - start).in_msec() << endl;
+        }
+        {
+
+            pool_allocator<int, cnt, static_pool, sizeof(int)>  alloc;
+            //loose_sharing_pool_allocator<int, static_pool<cnt, sizeof(int)> >   alloc;
+            i = 0;
+
+            timestamp   start;
+            for (; i < loop; ++i)
+            {
+                idx = 0;
+                for(; idx < cnt; ++idx)
+                {
+                    array[idx] = alloc.allocate(1);
+                }
+                idx = 0;
+                for(; idx < cnt; ++idx)
+                {
+                    alloc.deallocate(array[idx], 1);
+                }
+            }
+            cout << "Pool Allocator:" << endl;
+            cout << (timestamp::now - start).in_msec() << endl;
+        }
+        {
+            std::allocator<int> alloc;
+
+            i = 0;
+
+            timestamp   start;
+            for (; i < loop; ++i)
+            {
+                idx = 0;
+                for(; idx < cnt; ++idx)
+                {
+                    array[idx] = alloc.allocate(1);
+                }
+                idx = 0;
+                for(; idx < cnt; ++idx)
+                {
+                    alloc.deallocate(array[idx], 1);
+                }
+            }
+            cout << "Standard Allocator:" << endl;
+            cout << (timestamp::now - start).in_msec() << endl;
+        }
+        idx = 0;
+        {
+            i = 0;
+
+            timestamp   start;
+            for (; i < loop; ++i)
+            {
+                idx = 0;
+                for(; idx < cnt; ++idx)
+                {
+                    array[idx] = new int;
+                }
+                idx = 0;
+                for(; idx < cnt; ++idx)
+                {
+                    delete array[idx];
+                }
+            }
+            cout << "new/delete" << endl;
+            cout << (timestamp::now - start).in_msec() << endl;
+        }
+    }
+}
+
 int main ()
 {
     //for (size_t cnt = 0; ; ++cnt)
@@ -486,6 +619,8 @@ int main ()
 
         //cout << "No: " << (int)cnt << endl;
         //test_thread_local_singleton::test();
+        //test_allocator::test();
+        //return 0;
         test_udp::test();
         test_timing::test();
         test_process_singleton::test();

@@ -29,6 +29,8 @@
 #include <k2/mutex.h>
 #include <k2/cond_var.h>
 #include <k2/timing.h>
+#include <k2/type_manip.h>
+#include <k2/allocator.h>
 
 #include <iostream>
 #include <cassert>
@@ -164,9 +166,15 @@ struct service_mgr
     }
     void operator() () const
     {
-        ipv4_addr       local_ip(127, 0, 0, 1);
-        layer4_addr     local_addr(local_ip, 2266);
-        tcp_listener    listener(local_addr);
+        using namespace ipv4;
+        typedef std::basic_string<char, char_traits<char>, local_allocator<char> > fast_string;
+        std::vector<transport_addr> tp_addrs = getaddrinfo(
+            type_tag<tcp_listener>(), 
+            false,
+            fast_string(""),
+            fast_string("2266"));
+        transport_addr  tp_addr = tp_addrs.front();
+        tcp_listener    listener(tp_addr);
         {
             auto_ptr<thread>    service_pool[128];
             size_t idx = 0;
@@ -176,7 +184,7 @@ struct service_mgr
             }
 
             {
-               timestamp       timer(time_span(150000));
+               timestamp       timer(time_span(600* 1000));
                on_mgr_cancelled on_cancel(service_pool, m_service_cnt);
 
                 while (1)
@@ -209,6 +217,7 @@ struct service_mgr
                         cout << "Mgr : timer remains " << remain.in_sec() << " seconds." << endl;
                     }
                 }
+                on_cancel();
             }
         }
         mutex::scoped_guard guard(cout_mtx);

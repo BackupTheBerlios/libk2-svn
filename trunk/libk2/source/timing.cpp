@@ -1,22 +1,32 @@
-/*  libk2   <timing.cpp>
+/*
+    Copyright (c) 2003, 2004, Kenneth Chang-Hsing Ho
+    All rights reserved.
 
-    Copyright (C) 2003, 2004 Kenneth Chang-Hsing Ho.
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
 
-    Written by Kenneth Chang-Hsing Ho <kenho@bluebottle.com>
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    * Neither the name of the k2 nor the names of its contributors may be used
+      to endorse or promote products derived from this software without
+      specific prior written permission.
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
 */
 #include <k2/timing.h>
 
@@ -35,183 +45,251 @@
 
 #include <time.h>
 
-namespace k2
+namespace   //  unnamed
 {
+    static const k2::uint64_t   one_thousand    = 1000;
 
-    namespace   //  unnamed
-    {
-        static const uint64_t   one_thousand    = 1000;
-
-        inline uint64_t os_timestamp ()
+    inline k2::uint64_t os_timestamp ()
 #if defined(K2_OS_WIN32)
-        {
-            _timeb  tb;
-            _ftime( &tb );
+    {
+        _timeb  tb;
+        _ftime( &tb );
 
-            return  (uint64_t(tb.time) * one_thousand + tb.millitm );
-        }
+        return  (k2::uint64_t(tb.time) * one_thousand + tb.millitm );
+    }
 #elif defined(K2_HAS_POSIX_API)
-        {
-            timeval tv;
-            gettimeofday(&tv, NULL);
+    {
+        timeval tv;
+        gettimeofday(&tv, NULL);
 
-            return  (uint64_t(tv.tv_sec) * one_thousand +
-                tv.tv_usec / one_thousand);
-        }
+        return  (k2::uint64_t(tv.tv_sec) * one_thousand +
+            tv.tv_usec / one_thousand);
+    }
 #endif
 
-    }   //  unnamed namespace
+}   //  unnamed namespace
 
-    //static
-    timestamp::now_tag  timestamp::now;
+//static
+k2::timestamp::now_tag  k2::timestamp::now;
 
-    timestamp::timestamp ()
-    :   m_msec(os_timestamp())
-    {
-    }
-    timestamp::timestamp (const timestamp& rhs)
-    :   m_msec(rhs.m_msec)
-    {
-    }
-    timestamp::timestamp (const time_span& span_to_increse_from_now)
-    :   m_msec(os_timestamp())
-    {
-        *this += span_to_increse_from_now;
-    }
-    timestamp::timestamp (uint64_t msec)
-    :   m_msec(msec)
-    {
-    }
-    timestamp& timestamp::operator= (const timestamp& rhs)
-    {
-        m_msec = rhs.m_msec;
-        return  *this;
-    }
-    uint64_t timestamp::in_msec () const
-    {
-        return  m_msec;
-    }
-    uint32_t timestamp::in_sec () const
-    {
-        return  uint32_t(m_msec / one_thousand);
-    }
-    uint16_t timestamp::msec_of_sec () const
-    {
-        return  uint16_t(m_msec % one_thousand);
-    }
-    bool timestamp::expired () const
-    {
-        return  *this <= timestamp::now;
-    }
-    timestamp& timestamp::operator+= (const time_span& span_to_increase)
-    {
-        m_msec += span_to_increase.in_msec();
-        return  *this;
-    }
-    timestamp& timestamp::operator-= (const time_span& span_to_decrease)
-    {
-        m_msec -= span_to_decrease.in_msec();
-        return  *this;
-    }
-    const time_span timestamp::operator-= (const timestamp& rhs)
-    {
-        if (m_msec > rhs.in_msec())
-            return  time_span(m_msec - rhs.in_msec());
-        else
-            return  time_span(0);
-    }
-    const time_span timestamp::operator-= (timestamp::now_tag)
-    {
-        uint64_t    now = os_timestamp();
-        if (m_msec > now)
-            return  time_span(m_msec - now);
-        else
-            return  time_span(0);
-    }
-    uint32_t timestamp::hash () const
-    {
-        //  Ideally, magic_num should be a timestamp close to present time.
-        //  Perhaps year 2000?
-        static const uint64_t   magic_num = 0;
-        uint64_t    to_hash = m_msec - magic_num;
-        uint32_t*   pint32 = reinterpret_cast<uint32_t*>(&to_hash);
-        return
+k2::timestamp::timestamp ()
+:   m_msec(os_timestamp())
+{
+}
+k2::timestamp::timestamp (const timestamp& rhs)
+:   m_msec(rhs.m_msec)
+{
+}
+k2::timestamp::timestamp (const time_span& span_to_increse_from_now)
+:   m_msec(os_timestamp())
+{
+    *this += span_to_increse_from_now;
+}
+k2::timestamp::timestamp (uint64_t msec)
+:   m_msec(msec)
+{
+}
+k2::timestamp&
+k2::timestamp::operator= (const timestamp& rhs)
+{
+    m_msec = rhs.m_msec;
+    return  *this;
+}
+k2::uint64_t
+k2::timestamp::in_msec () const
+{
+    return  m_msec;
+}
+k2::uint32_t
+k2::timestamp::in_sec () const
+{
+    return  uint32_t(m_msec / one_thousand);
+}
+k2::uint16_t
+k2::timestamp::msec_of_sec () const
+{
+    return  uint16_t(m_msec % one_thousand);
+}
+bool
+k2::timestamp::expired () const
+{
+    return  *this <= timestamp::now;
+}
+k2::timestamp&
+k2::timestamp::operator+= (const time_span& span_to_increase)
+{
+    m_msec += span_to_increase.in_msec();
+    return  *this;
+}
+k2::timestamp&
+k2::timestamp::operator-= (const time_span& span_to_decrease)
+{
+    m_msec -= span_to_decrease.in_msec();
+    return  *this;
+}
+const k2::time_span
+k2::timestamp::operator-= (const timestamp& rhs)
+{
+    if (m_msec > rhs.in_msec())
+        return  time_span(m_msec - rhs.in_msec());
+    else
+        return  time_span(0);
+}
+const k2::time_span
+k2::timestamp::operator-= (timestamp::now_tag)
+{
+    uint64_t    now = os_timestamp();
+    if (m_msec > now)
+        return  time_span(m_msec - now);
+    else
+        return  time_span(0);
+}
+k2::uint32_t
+k2::timestamp::hash () const
+{
+    //  Ideally, magic_num should be a timestamp close to present time.
+    //  Perhaps year 2000?
+    static const uint64_t   magic_num = 0;
+    uint64_t    to_hash = m_msec - magic_num;
+    uint32_t*   pint32 = reinterpret_cast<uint32_t*>(&to_hash);
+    return
 #if defined(K2_BYTEORDER_BIGENDIAN)
-        pint32[1];
+    pint32[1];
 #else
-        pint32[0];
+    pint32[0];
 #endif
-    }
-    timestamp operator+ (const timestamp& val, const time_span& span_to_increase)
-    {
-        timestamp res(val);
-        res += span_to_increase;
-        return  res;
-    }
-    timestamp operator- (const timestamp& val, const time_span& span_to_decrease)
-    {
-        timestamp res(val);
-        res -= span_to_decrease;
-        return  res;
-    }
-    time_span operator- (const timestamp& lhs, const timestamp& rhs)
-    {
-        timestamp   tmp(lhs);
-        return  (tmp -= rhs);
-    }
-    time_span operator- (const timestamp& lhs, timestamp::now_tag)
-    {
-        timestamp   tmp(lhs);
-        return  (tmp -= timestamp::now);
-    }
-    bool operator== (const timestamp& lhs, const timestamp& rhs)
-    {
-        return  lhs.in_msec() == rhs.in_msec();
-    }
-    bool operator!= (const timestamp& lhs, const timestamp& rhs)
-    {
-        return  lhs.in_msec() != rhs.in_msec();
-    }
-    bool operator< (const timestamp& lhs, const timestamp& rhs)
-    {
-        return  lhs.in_msec() < rhs.in_msec();
-    }
-    bool operator<= (const timestamp& lhs, const timestamp& rhs)
-    {
-        return  lhs.in_msec() <= rhs.in_msec();
-    }
-    bool operator> (const timestamp& lhs, const timestamp& rhs)
-    {
-        return  lhs.in_msec() > rhs.in_msec();
-    }
-    bool operator>= (const timestamp& lhs, const timestamp& rhs)
-    {
-        return  lhs.in_msec() >= rhs.in_msec();
-    }
-    bool operator== (const timestamp& lhs, timestamp::now_tag)
-    {
-        return  lhs.in_msec() == os_timestamp();
-    }
-    bool operator!= (const timestamp& lhs, timestamp::now_tag)
-    {
-        return  lhs.in_msec() != os_timestamp();
-    }
-    bool operator< (const timestamp& lhs, timestamp::now_tag)
-    {
-        return  lhs.in_msec() < os_timestamp();
-    }
-    bool operator<= (const timestamp& lhs, timestamp::now_tag)
-    {
-        return  lhs.in_msec() <= os_timestamp();
-    }
-    bool operator> (const timestamp& lhs, timestamp::now_tag)
-    {
-        return  lhs.in_msec() > os_timestamp();
-    }
-    bool operator>= (const timestamp& lhs, timestamp::now_tag)
-    {
-        return  lhs.in_msec() >= os_timestamp();
-    }
+}
+k2::timestamp
+k2::operator+ (const timestamp& val, const time_span& span_to_increase)
+{
+    timestamp res(val);
+    res += span_to_increase;
+    return  res;
+}
+k2::timestamp
+k2::operator- (const timestamp& val, const time_span& span_to_decrease)
+{
+    timestamp res(val);
+    res -= span_to_decrease;
+    return  res;
+}
+k2::timestamp
+k2::operator+ (timestamp::now_tag, const time_span& span_to_increase)
+{
+    return  timestamp(os_timestamp() + span_to_increase.in_msec());
+}
+k2::timestamp
+k2::operator- (timestamp::now_tag, const time_span& span_to_decrease)
+{
+    return  timestamp(os_timestamp() - span_to_decrease.in_msec());
+}
+k2::time_span
+k2::operator- (const timestamp& lhs, const timestamp& rhs)
+{
+    timestamp   tmp(lhs);
+    return  (tmp -= rhs);
+}
+k2::time_span
+k2::operator- (timestamp::now_tag, const timestamp& rhs)
+{
+    return  time_span(os_timestamp() - rhs.in_msec());
+}
+k2::time_span
+k2::operator- (const timestamp& lhs, timestamp::now_tag)
+{
+    timestamp   tmp(lhs);
+    return  (tmp -= timestamp::now);
+}
+bool
+k2::operator== (const timestamp& lhs, const timestamp& rhs)
+{
+    return  lhs.in_msec() == rhs.in_msec();
+}
+bool
+k2::operator!= (const timestamp& lhs, const timestamp& rhs)
+{
+    return  lhs.in_msec() != rhs.in_msec();
+}
+bool
+k2::operator< (const timestamp& lhs, const timestamp& rhs)
+{
+    return  lhs.in_msec() < rhs.in_msec();
+}
+bool
+k2::operator<= (const timestamp& lhs, const timestamp& rhs)
+{
+    return  lhs.in_msec() <= rhs.in_msec();
+}
+bool
+k2::operator> (const timestamp& lhs, const timestamp& rhs)
+{
+    return  lhs.in_msec() > rhs.in_msec();
+}
+bool
+k2::operator>= (const timestamp& lhs, const timestamp& rhs)
+{
+    return  lhs.in_msec() >= rhs.in_msec();
+}
+bool
+k2::operator== (const timestamp& lhs, timestamp::now_tag)
+{
+    return  lhs.in_msec() == os_timestamp();
+}
+bool
+k2::operator!= (const timestamp& lhs, timestamp::now_tag)
+{
+    return  lhs.in_msec() != os_timestamp();
+}
+bool
+k2::operator< (const timestamp& lhs, timestamp::now_tag)
+{
+    return  lhs.in_msec() < os_timestamp();
+}
+bool
+k2::operator<= (const timestamp& lhs, timestamp::now_tag)
+{
+    return  lhs.in_msec() <= os_timestamp();
+}
+bool
+k2::operator> (const timestamp& lhs, timestamp::now_tag)
+{
+    return  lhs.in_msec() > os_timestamp();
+}
+bool
+k2::operator>= (const timestamp& lhs, timestamp::now_tag)
+{
+    return  lhs.in_msec() >= os_timestamp();
+}
+bool
+k2::operator== (timestamp::now_tag, const timestamp& rhs)
+{
+    return  os_timestamp() == rhs.in_msec();
+}
+bool
+k2::operator!= (timestamp::now_tag, const timestamp& rhs)
+{
+    return  os_timestamp() != rhs.in_msec();
+}
+bool
+k2::operator< (timestamp::now_tag, const timestamp& rhs)
+{
+    return  os_timestamp() < rhs.in_msec();
+}
+bool
+k2::operator<= (timestamp::now_tag, const timestamp& rhs)
+{
+    return  os_timestamp() <= rhs.in_msec();
+}
+bool
+k2::operator> (timestamp::now_tag, const timestamp& rhs)
+{
+    return  os_timestamp() > rhs.in_msec();
+}
+bool
+k2::operator>= (timestamp::now_tag, const timestamp& rhs)
+{
+    return  os_timestamp() >= rhs.in_msec();
+}
 
 
 
@@ -219,176 +297,196 @@ namespace k2
 
 
 
-    time_span::time_span ()
-    :   m_msec(0)
-    {
-    }
-    time_span::time_span (const time_span& rhs)
-    :   m_msec(rhs.m_msec)
-    {
-    }
-    time_span::time_span (uint64_t msec)
-    :   m_msec(msec)
-    {
-    }
-    time_span& time_span::operator= (const time_span& rhs)
-    {
-        m_msec = rhs.m_msec;
-        return  *this;
-    }
-    uint64_t time_span::in_msec () const
-    {
-        return  m_msec;
-    }
-    uint32_t time_span::in_sec () const
-    {
-        return  uint32_t(m_msec / one_thousand);
-    }
-    uint16_t time_span::msec_of_sec () const
-    {
-        return  uint16_t(m_msec % one_thousand);
-    }
-    time_span& time_span::operator+= (const time_span& span_to_increase)
-    {
-        m_msec += span_to_increase.m_msec;
-        return  *this;
-    }
-    time_span& time_span::operator-= (const time_span& span_to_decrease)
-    {
-        m_msec -= span_to_decrease.m_msec;
-        return  *this;
-    }
-    time_span& time_span::operator*= (uint_t mul)
-    {
-        m_msec *= mul;
-        return  *this;
-    }
-    time_span& time_span::operator/= (uint_t div)
-    {
-        m_msec /= div;
-        return  *this;
-    }
-    time_span operator+ (const time_span& val, const time_span& span_to_increase)
-    {
-        time_span res(val);
-        res += span_to_increase;
-        return  res;
-    }
-    time_span operator- (const time_span& val, const time_span& span_to_decrease)
-    {
-        time_span res(val);
-        res -= span_to_decrease;
-        return  res;
-    }
-    time_span operator* (const time_span& val, uint_t mul)
-    {
-        time_span res(val);
-        res *= mul;
-        return  res;
-    }
-    time_span operator/ (const time_span& val, uint_t div)
-    {
-        time_span res(val);
-        res /= div;
-        return  res;
-    }
-    bool operator== (const time_span& lhs, const time_span& rhs)
-    {
-        return  lhs.in_msec() == rhs.in_msec();
-    }
-    bool operator!= (const time_span& lhs, const time_span& rhs)
-    {
-        return  lhs.in_msec() != rhs.in_msec();
-    }
-    bool operator< (const time_span& lhs, const time_span& rhs)
-    {
-        return  lhs.in_msec() < rhs.in_msec();
-    }
-    bool operator<= (const time_span& lhs, const time_span& rhs)
-    {
-        return  lhs.in_msec() <= rhs.in_msec();
-    }
-    bool operator> (const time_span& lhs, const time_span& rhs)
-    {
-        return  lhs.in_msec() > rhs.in_msec();
-    }
-    bool operator>= (const time_span& lhs, const time_span& rhs)
-    {
-        return  lhs.in_msec() >= rhs.in_msec();
-    }
+k2::time_span::time_span ()
+:   m_msec(0)
+{
+}
+k2::time_span::time_span (const time_span& rhs)
+:   m_msec(rhs.m_msec)
+{
+}
+k2::time_span::time_span (uint64_t msec)
+:   m_msec(msec)
+{
+}
+k2::time_span&
+k2::time_span::operator= (const time_span& rhs)
+{
+    m_msec = rhs.m_msec;
+    return  *this;
+}
+k2::uint64_t
+k2::time_span::in_msec () const
+{
+    return  m_msec;
+}
+k2::uint32_t
+k2::time_span::in_sec () const
+{
+    return  uint32_t(m_msec / one_thousand);
+}
+k2::uint16_t
+k2::time_span::msec_of_sec () const
+{
+    return  uint16_t(m_msec % one_thousand);
+}
+k2::time_span&
+k2::time_span::operator+= (const time_span& span_to_increase)
+{
+    m_msec += span_to_increase.m_msec;
+    return  *this;
+}
+k2::time_span&
+k2::time_span::operator-= (const time_span& span_to_decrease)
+{
+    m_msec -= span_to_decrease.m_msec;
+    return  *this;
+}
+k2::time_span&
+k2::time_span::operator*= (uint_t mul)
+{
+    m_msec *= mul;
+    return  *this;
+}
+k2::time_span&
+k2::time_span::operator/= (uint_t div)
+{
+    m_msec /= div;
+    return  *this;
+}
+k2::time_span
+k2::operator+ (const time_span& val, const time_span& span_to_increase)
+{
+    time_span res(val);
+    res += span_to_increase;
+    return  res;
+}
+k2::time_span
+k2::operator- (const time_span& val, const time_span& span_to_decrease)
+{
+    time_span res(val);
+    res -= span_to_decrease;
+    return  res;
+}
+k2::time_span
+k2::operator* (const time_span& val, uint_t mul)
+{
+    time_span res(val);
+    res *= mul;
+    return  res;
+}
+k2::time_span
+k2::operator/ (const time_span& val, uint_t div)
+{
+    time_span res(val);
+    res /= div;
+    return  res;
+}
+bool
+k2::operator== (const time_span& lhs, const time_span& rhs)
+{
+    return  lhs.in_msec() == rhs.in_msec();
+}
+bool
+k2::operator!= (const time_span& lhs, const time_span& rhs)
+{
+    return  lhs.in_msec() != rhs.in_msec();
+}
+bool
+k2::operator< (const time_span& lhs, const time_span& rhs)
+{
+    return  lhs.in_msec() < rhs.in_msec();
+}
+bool
+k2::operator<= (const time_span& lhs, const time_span& rhs)
+{
+    return  lhs.in_msec() <= rhs.in_msec();
+}
+bool
+k2::operator> (const time_span& lhs, const time_span& rhs)
+{
+    return  lhs.in_msec() > rhs.in_msec();
+}
+bool
+k2::operator>= (const time_span& lhs, const time_span& rhs)
+{
+    return  lhs.in_msec() >= rhs.in_msec();
+}
 
 
 
 
 
 
-
-
-
+namespace
+{
     struct calendar_util
     {
         //  change to spin_lock
-        typedef spin_lock                                   lock_type;
-        typedef class_singleton<calendar_util, spin_lock>   the_lock;
-        typedef scoped_guard<spin_lock>                     scoped_guard;
+        typedef k2::spin_lock   lock_type;
+        typedef k2::class_singleton<calendar_util, k2::spin_lock>
+            the_lock;
+        typedef k2::scoped_guard<k2::spin_lock>
+            scoped_guard;
     };
+}   //  namespace
 
-    template </*time_zone_constant*/>
-    void  calendar<time_zone::utc>::validate () const
+template </*k2::time_zone_constant*/>
+void
+k2::calendar<k2::time_zone::utc>::validate () const
+{
+    calendar_util::lock_type&   the_lock = calendar_util::the_lock::instance();
+    typedef calendar_util::scoped_guard scoped_guard;
+
+    if (m_validated == false)
     {
-        calendar_util::lock_type&   the_lock = calendar_util::the_lock::instance();
-        typedef calendar_util::scoped_guard scoped_guard;
+        time_t  t = m_timestamp.in_sec();
 
-        if (m_validated == false)
         {
-            time_t  t = m_timestamp.in_sec();
+            scoped_guard    guard(the_lock);
 
-            {
-                scoped_guard    guard(the_lock);
+            tm* ptm = gmtime(&t);
 
-                tm* ptm = gmtime(&t);
-
-                m_year          = ptm->tm_year + 1970;
-                m_month_of_year = ptm->tm_mon;
-                m_day_of_month  = ptm->tm_mday - 1;
-                m_hour_of_day   = ptm->tm_hour;
-                m_min_of_hour   = ptm->tm_min;
-                m_sec_of_min    = ptm->tm_sec;
-                m_day_of_year   = ptm->tm_yday;
-                m_day_of_week   = ptm->tm_wday;
-            }
-            m_validated     = true;
-            m_msec_of_sec   = m_timestamp.msec_of_sec();
+            m_year          = ptm->tm_year + 1970;
+            m_month_of_year = ptm->tm_mon;
+            m_day_of_month  = ptm->tm_mday - 1;
+            m_hour_of_day   = ptm->tm_hour;
+            m_min_of_hour   = ptm->tm_min;
+            m_sec_of_min    = ptm->tm_sec;
+            m_day_of_year   = ptm->tm_yday;
+            m_day_of_week   = ptm->tm_wday;
         }
+        m_validated     = true;
+        m_msec_of_sec   = m_timestamp.msec_of_sec();
     }
+}
 
-    template </*time_zone_constant*/>
-    void calendar<time_zone::local>::validate () const
+template </*k2::time_zone_constant*/>
+void
+k2::calendar<k2::time_zone::local>::validate () const
+{
+    calendar_util::lock_type&   the_lock = calendar_util::the_lock::instance();
+    typedef calendar_util::scoped_guard scoped_guard;
+
+    if (m_validated == false)
     {
-        calendar_util::lock_type&   the_lock = calendar_util::the_lock::instance();
-        typedef calendar_util::scoped_guard scoped_guard;
+        time_t  t = m_timestamp.in_sec();
 
-        if (m_validated == false)
         {
-            time_t  t = m_timestamp.in_sec();
+            scoped_guard    guard(the_lock);
 
-            {
-                scoped_guard    guard(the_lock);
+            tm*     ptm = localtime(&t);
 
-                tm*     ptm = localtime(&t);
-
-                m_year          = ptm->tm_year + 1970;
-                m_month_of_year = ptm->tm_mon;
-                m_day_of_month  = ptm->tm_mday - 1;
-                m_hour_of_day   = ptm->tm_hour;
-                m_min_of_hour   = ptm->tm_min;
-                m_sec_of_min    = ptm->tm_sec;
-                m_day_of_year   = ptm->tm_yday;
-                m_day_of_week   = ptm->tm_wday;
-            }
-            m_validated     = true;
-            m_msec_of_sec   = m_timestamp.msec_of_sec();
+            m_year          = ptm->tm_year + 1970;
+            m_month_of_year = ptm->tm_mon;
+            m_day_of_month  = ptm->tm_mday - 1;
+            m_hour_of_day   = ptm->tm_hour;
+            m_min_of_hour   = ptm->tm_min;
+            m_sec_of_min    = ptm->tm_sec;
+            m_day_of_year   = ptm->tm_yday;
+            m_day_of_week   = ptm->tm_wday;
         }
+        m_validated     = true;
+        m_msec_of_sec   = m_timestamp.msec_of_sec();
     }
-
-}   //  namespace k2
+}

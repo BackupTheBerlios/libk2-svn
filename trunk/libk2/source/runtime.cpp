@@ -1,22 +1,32 @@
-/*  libk2   <runtime.cpp>
+/*
+    Copyright (c) 2003, 2004, Kenneth Chang-Hsing Ho
+    All rights reserved.
 
-    Copyright (C) 2003, 2004 Kenneth Chang-Hsing Ho.
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
 
-    Written by Kenneth Chang-Hsing Ho <kenho@bluebottle.com>
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+    * Neither the name of the k2 nor the names of its contributors may be used
+      to endorse or promote products derived from this software without
+      specific prior written permission.
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
 */
 #include <k2/runtime.h>
 
@@ -31,24 +41,19 @@
 namespace
 {
     bool k2_is_dl = false;
-
 }
-namespace k2
+
+bool k2::runtime::is_dl ()
 {
-
-    bool runtime::is_dl ()
-    {
-        return  k2_is_dl;
-    }
-
-}   //  namespace k2
+    return  k2_is_dl;
+}
 
 #if defined(K2_OS_WIN32)
 
 #   include <winsock2.h>
 #   include <windows.h>
 
-    BOOL k2_winsock2_init ()
+    void winsock2_init ()
     {
         WORD wVersionRequested;
         WSADATA wsaData;
@@ -58,59 +63,45 @@ namespace k2
 
         err = WSAStartup( wVersionRequested, &wsaData );
         if ( err != 0 ) {
-            // Tell the user that we could not find a usable
-            // WinSock DLL.
-            return  FALSE;
+            throw   std::exception("k2 fails to load a usable WinSock DLL");
         }
         if ( LOBYTE( wsaData.wVersion ) != 2 ||
                 HIBYTE( wsaData.wVersion ) != 2 ) {
-            // Tell the user that we could not find a usable
-            // WinSock DLL.
             WSACleanup( );
-            return  FALSE;
+            throw   std::exception("k2 fails to load WinSock 2.2 DLL");
         }
-        return  TRUE;
-    }
-
-    BOOL k2_win32_init ()
-    {
-        if (k2_winsock2_init() == TRUE)
-        {
-            try
-            {
-                k2::runtime::init();
-            }
-            catch (std::exception&)
-            {
-                return  FALSE;
-            }
-            return  TRUE;
-        }
-        return  FALSE;
-    }
-    void k2_win32_fini ()
-    {
-        k2::runtime::fini();
     }
 
     BOOL APIENTRY DllMain( HANDLE /*hModule*/,
-                        DWORD  ul_reason_for_call,
-                        LPVOID /*lpReserved*/
-                        )
+        DWORD  ul_reason_for_call,
+        LPVOID /*lpReserved*/)
     {
-        switch (ul_reason_for_call)
+        try
         {
-        case DLL_PROCESS_ATTACH:
-            k2_is_dl = true;
-            return  k2_win32_init();
-        case DLL_PROCESS_DETACH:
-            k2_win32_fini();
+            switch (ul_reason_for_call)
+            {
+            case DLL_PROCESS_ATTACH:
+                k2_is_dl = true;
+                winsock2_init();
+                k2::runtime::init();
+                break;
+            case DLL_PROCESS_DETACH:
+                k2::runtime::fini();
+                break;
+            }
+        }
+        catch(...)
+        {
+            return  FALSE;
         }
         return TRUE;
     }
 
 #endif  //  K2_OS_WIN32
 
+//  !kh!
+//  cygwin port has not been maintained for a while,
+//  might be broken
 #if defined(K2_OS_CYGWIN)
 
 #   include <windows.h>
@@ -123,11 +114,12 @@ namespace k2
         switch (ul_reason_for_call)
         {
         case DLL_PROCESS_ATTACH:
-            k2_is_dl = true;
+            k2_is_dl = TRUE;
             k2::runtime::init();
-            return  true;
+            break;
         case DLL_PROCESS_DETACH:
             k2::runtime::fini();
+            break;
         }
         return TRUE;
     }
@@ -152,7 +144,7 @@ namespace k2
 #   define  K2_STD_H_CSTDLIB
 #endif
 
-namespace k2
+namespace
 {
 
     struct atexit_task
@@ -215,39 +207,41 @@ namespace k2
                 pstack = pnext;
             }
         }
-        static atexit_task* pstack;
-        static spin_lock    lock;
-        static bool         exec_registered;
+        static atexit_task*     pstack;
+        static k2::spin_lock    lock;
+        static bool             exec_registered;
     };
-    //static
+
+    //  static
     atexit_task*    atexit_stack::pstack = 0;
-    //static
-    spin_lock       atexit_stack::lock;
-    //static
+    //  static
+    k2::spin_lock   atexit_stack::lock;
+    //  static
     bool            atexit_stack::exec_registered = false;
 
-    //static
-    void runtime::atexit_impl (void (*routine)(void*), void* arg, atexit_prio_t prio)
-    {
-        spin_lock::scoped_guard guard(atexit_stack::lock);
+}   //  namespace
 
-        atexit_stack::push(routine, arg, prio);
+//static
+void
+k2::runtime::atexit_impl (void (*routine)(void*), void* arg, prio_t prio)
+{
+    spin_lock::scoped_guard guard(atexit_stack::lock);
 
-        if (atexit_stack::exec_registered == false && runtime::is_dl() == false)
-            std::atexit(atexit_stack::exec);
-    }
+    atexit_stack::push(routine, arg, prio);
 
-    //static
-    void runtime::init ()
-    {
-    }
+    if (atexit_stack::exec_registered == false && runtime::is_dl() == false)
+        std::atexit(atexit_stack::exec);
+}
 
-    //static
-    void runtime::fini ()
-    {
-        atexit_stack::exec();
-    }
+//static
+void
+k2::runtime::init ()
+{
+}
 
-
-}   //  namespace k2
-
+//static
+void
+k2::runtime::fini ()
+{
+    atexit_stack::exec();
+}

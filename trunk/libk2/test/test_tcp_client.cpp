@@ -18,6 +18,7 @@
 	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <k2/utility.h>
 #include <k2/thread.h>
 #include <k2/spin_lock.h>
 #include <k2/assert.h>
@@ -26,6 +27,7 @@
 #include <k2/ipv4_udp.h>
 #include <k2/socket_error.h>
 #include <k2/singleton.h>
+#include <k2/allocator.h>
 
 #include <iostream>
 #include <cassert>
@@ -36,9 +38,9 @@ using namespace k2::ipv4;
 
 struct tcp_dumper
 {
-    layer4_addr m_peer_addr;
+    transport_addr m_peer_addr;
 
-    tcp_dumper (layer4_addr peer_addr)
+    tcp_dumper (transport_addr peer_addr)
     :   m_peer_addr(peer_addr)
     {
     }
@@ -58,11 +60,15 @@ struct tcp_dumper
 
 int main ()
 {
-    ipv4_addr   peer_ip(127, 0, 0, 1);
-    layer4_addr peer_addr(peer_ip, 2266);
+    using namespace ipv4;
+    std::vector<transport_addr> tp_addrs = getaddrinfo(
+        type_tag<tcp_transport>(), 
+        false,
+        local_string(""),
+        local_string("2266"));
     try
     {
-        tcp_dumper  tcp_dump(peer_addr);
+        tcp_dumper  tcp_dump(tp_addrs.front());
         tcp_dump();
     }
     catch (socket_errno&)
