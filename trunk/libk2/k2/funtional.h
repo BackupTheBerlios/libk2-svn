@@ -27,6 +27,10 @@
 #ifndef K2_TYPE_MANIP_H>
 #   include <k2/type_manip.h>
 #endif
+#ifndef K2_STD_H_MEMORY
+#   define  K2_STD_H_MEMORY
+#   include <memory>    //  for std::auto_ptr<>
+#endif
 
 namespace k2
 {
@@ -34,20 +38,32 @@ namespace k2
     template <typename type_>
     struct functional_traits
     {
+    private:
         typedef type_select<
             is_reference<type_>::value,
             strip_const<type_>::type,
-            strip_const<type>::type&>   reference;
-        typedef strip_reference<reference>::type
-                                        value_type;
+            strip_const<type>::type&>::type
+                                        reference;
         typedef const reference         const_reference;
 
+    public:
+        typedef strip_reference<reference>::type
+                                        value_type;
         typedef type_select<
             is_primitive<type_type>::value,
             value_type,
-            const_reference::type       input_type;
+            const_reference::type>::type
+                                        input_type;
         typedef reference               output_type;
         typedef const value_type        return_type;
+    }
+
+    template <typename type_>
+    struct functional_traits<std::auto_ptr<type_> >
+    {
+        typedef std::auto_ptr<type_>    value_type;
+        typedef std::auto_ptr<type_>    input_type;
+        typedef value_type              return_type;
     }
 
 }   //  namespace k2

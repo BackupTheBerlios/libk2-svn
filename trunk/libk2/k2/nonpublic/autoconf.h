@@ -33,7 +33,7 @@
 #   define K2_COMPILER_VC
 #   define K2_COMPILER_VER          (_MSC_VER / 100)
 #   define K2_COMPILER_MINOR        (_MSC_VER % 100 / 10)
-#elif defined(__GNUC__) && (__GNUC__ >= 3) && (__GNUC_MINOR__ > 2)
+#elif defined(__GNUC__) && (__GNUC__ >= 3) && (__GNUC_MINOR__ >= 2)
 #   define K2_COMPILER_GCC
 #   define K2_COMPILER_VER          __GNUC__
 #   define K2_COMPILER_MINOR        __GNUC_MINOR__

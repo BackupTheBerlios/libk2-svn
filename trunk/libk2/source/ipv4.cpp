@@ -426,6 +426,7 @@ namespace k2
 
 
     ipv4_addr::ipv4_addr (uint8_t byte0, uint8_t byte1, uint8_t byte2, uint8_t byte3)
+    :   m_host32(0) //  to suppress warning from gcc 3.2
     {
         this->byte_at(0) = byte0;
         this->byte_at(1) = byte1;
@@ -433,12 +434,12 @@ namespace k2
         this->byte_at(3) = byte3;
     }
     ipv4_addr::ipv4_addr (const std::string& string)
+    :   m_host32(net2host(inet_addr(string.c_str())))
     {
-        m_host32 = net2host(inet_addr(string.c_str()));
     }
     ipv4_addr::ipv4_addr (const in_addr& other)
+    :   m_host32(net2host(other.s_addr))
     {
-        m_host32 = net2host(other.s_addr);
     }
 
     ipv4_addr::operator const in_addr () const

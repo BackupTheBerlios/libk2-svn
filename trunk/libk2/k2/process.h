@@ -21,7 +21,7 @@
 #ifndef K2_PROCESS_H
 #define K2_PROCESS_H
 
-#ifndef K2_BOUNCER_H
+#ifndef K2_COPY_BOUNCER_H
 #   include <k2/copy_bouncer.h>
 #endif
 #ifndef K2_STD_H_STRING

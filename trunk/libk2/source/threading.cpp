@@ -49,7 +49,7 @@
 #endif
 
 
-#if defined(K2_OS_UNIX)
+#if defined(K2_HAS_POSIX_API)
 #   include <unistd.h>  //  usleep
     namespace
     {
@@ -58,7 +58,7 @@
             ::usleep(msec * 1000);
         }
     }
-#else
+#elif defined(K2_HAS_WIN32_API)
 #   include <windows.h>
     namespace
     {
@@ -81,7 +81,7 @@ namespace
     inline pthread_mutex_t&     get_impl (k2::mutex::handle& handle)
     {
         K2_STATIC_ASSERT(
-            sizeof(handle) >= sizeof(pthread_mutex_t), handle_size_too_small);
+            (sizeof(handle) >= sizeof(pthread_mutex_t)), handle_size_too_small);
         return  reinterpret_cast<pthread_mutex_t&>(handle.holder);
     }
 

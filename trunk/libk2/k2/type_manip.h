@@ -247,7 +247,7 @@ namespace k2
         static const bool   value =
             is_integer<type_>::value ? true :
             is_float_point<type_>::value ? true :
-            is_pointer<type_> ? true :
+            is_pointer<type_>::value ? true :
             false;
     };
 

@@ -35,10 +35,11 @@
 #if defined(K2_RT_GLIBC)
 //  These headers don't need to be guarded,
 //  because they are platform dependent,
-//  and would be included by any k2 headers.
+//  therefore would not be included by any k2 headers.
 #   include <sys/types.h>
 #   include <unistd.h>
 #   include <sys/wait.h>
+#   include <ctype.h>
 #endif  //  K2_RT_GLIBC
 
 #if defined(K2_RT_MSVCRT)

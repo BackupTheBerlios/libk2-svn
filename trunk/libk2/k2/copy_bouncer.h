@@ -1,4 +1,4 @@
-/*	libk2	<k2/bouncer.h>
+/*	libk2	<k2/copy_bouncer.h>
 
 	Copyright (C) 2003, 2004 Kenneth Chang-Hsing Ho.
 
@@ -18,8 +18,8 @@
 	License along with this library; if not, write to the Free Software
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#ifndef	K2_BOUNCER_H
-#define	K2_BOUNCER_H
+#ifndef	K2_COPY_BOUNCER_H
+#define	K2_COPY_BOUNCER_H
 
 #ifndef	K2_CONFIG_H
 #	include <k2/config.h>
@@ -49,7 +49,7 @@ namespace k2
 *	\ingroup	Utility
 *	\brief		Macro that inserts a non-copyable member into a class.
 */
-#define	K2_BOUNCE_DEFAULT_COPY()\
+#define	K2_INJECT_COPY_BOUNCER()\
 	k2::default_copy_bouncer copy_bouncer
 
-#endif	//	!K2_BOUNCER_H
+#endif	//	!K2_COPY_BOUNCER_H
