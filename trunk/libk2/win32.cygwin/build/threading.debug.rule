@@ -1,9 +1,0 @@
-../../win32.cygwin/bin.debug/threading.o threading.debug.rule : ../../source/threading.cpp ../../k2/thread.h \
-  ../../k2/config.h ../../k2/nonpublic/autoconf.h ../../k2/bouncer.h \
-  ../../k2/memory.h ../../k2/stdint.h ../../k2/spin_lock.h \
-  ../../k2/scope.h ../../k2/exception.h ../../k2/atomic.h \
-  ../../k2/thread_once.h ../../k2/mutex.h ../../k2/cond_var.h \
-  ../../k2/tls.h ../../k2/singleton.h ../../k2/runtime.h \
-  ../../k2/assert.h ../../k2/timing.h ../../k2/type_manip.h \
-  ../../k2/errno.h
-	g++ -c -ggdb -Wall -I../../ -I../depend/include -o ../../win32.cygwin/bin.debug/threading.o ../../source/threading.cpp

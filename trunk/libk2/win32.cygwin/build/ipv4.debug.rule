@@ -1,9 +1,0 @@
-../../win32.cygwin/bin.debug/ipv4.o ipv4.debug.rule : ../../source/ipv4.cpp ../../k2/ipv4.h ../../k2/config.h \
-  ../../k2/nonpublic/autoconf.h ../../k2/stdint.h ../../k2/byte_manip.h \
-  ../../k2/type_manip.h ../../k2/assert.h ../../k2/mutex.h \
-  ../../k2/bouncer.h ../../k2/scope.h ../../k2/exception.h \
-  ../../k2/singleton.h ../../k2/runtime.h ../../k2/thread_once.h \
-  ../../k2/atomic.h ../../k2/tls.h ../../k2/memory.h \
-  ../../k2/socket_error.h ../../k2/ipv4_tcp.h ../../k2/ipv4_udp.h \
-  ../../k2/errno.h ../../k2/timing.h
-	g++ -c -ggdb -Wall -I../../ -I../depend/include -o ../../win32.cygwin/bin.debug/ipv4.o ../../source/ipv4.cpp
