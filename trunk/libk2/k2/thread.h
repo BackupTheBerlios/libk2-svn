@@ -30,6 +30,9 @@
 #ifndef	K2_MEMORY_H
 #	include <k2/memory.h>
 #endif
+#ifndef	K2_STDINT_H
+#	include <k2/stdint.h>
+#endif
 
 namespace k2
 {

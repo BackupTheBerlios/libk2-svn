@@ -1,0 +1,4 @@
+../../win32.cygwin/bin.opt/process.o process.opt.rule : ../../source/process.cpp ../../k2/process.h ../../k2/bouncer.h \
+  ../../k2/config.h ../../k2/nonpublic/autoconf.h ../../k2/spin_lock.h \
+  ../../k2/scope.h ../../k2/exception.h ../../k2/atomic.h
+	g++ -c -Wall -I../../ -I../depend/include -o ../../win32.cygwin/bin.opt/process.o ../../source/process.cpp

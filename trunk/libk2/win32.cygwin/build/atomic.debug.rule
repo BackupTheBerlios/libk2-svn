@@ -1,0 +1,3 @@
+../../win32.cygwin/bin.debug/atomic.o atomic.debug.rule : ../../source/atomic.cpp ../../k2/atomic.h ../../k2/config.h \
+  ../../k2/nonpublic/autoconf.h
+	g++ -c -ggdb -Wall -I../../ -I../depend/include -o ../../win32.cygwin/bin.debug/atomic.o ../../source/atomic.cpp

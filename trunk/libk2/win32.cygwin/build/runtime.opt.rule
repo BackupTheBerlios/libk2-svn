@@ -1,0 +1,4 @@
+../../win32.cygwin/bin.opt/runtime.o runtime.opt.rule : ../../source/runtime.cpp ../../k2/runtime.h ../../k2/config.h \
+  ../../k2/nonpublic/autoconf.h ../../k2/spin_lock.h ../../k2/bouncer.h \
+  ../../k2/scope.h ../../k2/exception.h ../../k2/atomic.h
+	g++ -c -Wall -I../../ -I../depend/include -o ../../win32.cygwin/bin.opt/runtime.o ../../source/runtime.cpp

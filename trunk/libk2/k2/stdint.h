@@ -43,8 +43,8 @@ namespace k2
 
 	typedef	unsigned int		uint_t;
 
-#if defined(K2_OS_CYGWIN)
-	typedef	unsigned long       size_t;
+#if defined(K2_COMPILER_GCC)
+	typedef	unsigned int        size_t;
 #endif
 
 }	//	namespace k2

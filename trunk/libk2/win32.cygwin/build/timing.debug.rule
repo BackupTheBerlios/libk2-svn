@@ -1,0 +1,7 @@
+../../win32.cygwin/bin.debug/timing.o timing.debug.rule : ../../source/timing.cpp ../../k2/timing.h ../../k2/config.h \
+  ../../k2/nonpublic/autoconf.h ../../k2/stdint.h ../../k2/type_manip.h \
+  ../../k2/spin_lock.h ../../k2/bouncer.h ../../k2/scope.h \
+  ../../k2/exception.h ../../k2/atomic.h ../../k2/singleton.h \
+  ../../k2/runtime.h ../../k2/thread_once.h ../../k2/tls.h \
+  ../../k2/assert.h ../../k2/memory.h
+	g++ -c -ggdb -Wall -I../../ -I../depend/include -o ../../win32.cygwin/bin.debug/timing.o ../../source/timing.cpp

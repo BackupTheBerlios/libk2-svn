@@ -1,0 +1,4 @@
+../../win32.cygwin/bin.debug/socket_error.o socket_error.debug.rule : ../../source/socket_error.cpp ../../k2/socket_error.h \
+  ../../k2/config.h ../../k2/nonpublic/autoconf.h ../../k2/exception.h \
+  ../../k2/errno.h
+	g++ -c -ggdb -Wall -I../../ -I../depend/include -o ../../win32.cygwin/bin.debug/socket_error.o ../../source/socket_error.cpp
