@@ -165,6 +165,9 @@
 				RelativePath="..\..\k2\config.h">
 			</File>
 			<File
+				RelativePath="..\..\k2\copy_bouncer.h">
+			</File>
+			<File
 				RelativePath="..\..\k2\dummy_lock.h">
 			</File>
 			<File
