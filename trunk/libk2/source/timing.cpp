@@ -27,18 +27,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <k2/timing.h>
-
-#include <k2/bits/spin_lock.h>
-#include <k2/singleton.h>
+#include <k2/bits/os.h>
 
 #if defined(K2_OS_UNIX)
 #   include <sys/time.h>
 #elif defined(K2_OS_WIN32)
 #   include <sys/timeb.h>
-#elif
+#else
 #   error   "libk2: Unsupported OS."
 #endif
 
+#include <source/pthread_util.inl>
 #include <time.h>
 
 namespace   //  unnamed
@@ -416,30 +415,21 @@ k2::operator>= (const time_span& lhs, const time_span& rhs)
 
 namespace
 {
-    struct calendar_util
-    {
-        //  change to spin_lock
-        typedef k2::spin_lock   lock_type;
-        typedef k2::class_singleton<calendar_util, k2::spin_lock>
-            the_lock;
-        typedef k2::scoped_guard<k2::spin_lock>
-            scoped_guard;
-    };
+
+    pthread_mutex_t gmtime_lock = PTHREAD_MUTEX_INITIALIZER;
+
 }   //  namespace
 
 template </*k2::time_zone_constant*/>
 void
 k2::calendar<k2::time_zone::utc>::validate () const
 {
-    calendar_util::lock_type&   the_lock = calendar_util::the_lock::instance();
-    typedef calendar_util::scoped_guard scoped_guard;
-
     if (m_validated == false)
     {
         time_t  t = m_timestamp.in_sec();
 
         {
-            scoped_guard    guard(the_lock);
+            ptmtx_guard guard(gmtime_lock);
 
             tm* ptm = gmtime(&t);
 
@@ -461,15 +451,12 @@ template </*k2::time_zone_constant*/>
 void
 k2::calendar<k2::time_zone::local>::validate () const
 {
-    calendar_util::lock_type&   the_lock = calendar_util::the_lock::instance();
-    typedef calendar_util::scoped_guard scoped_guard;
-
     if (m_validated == false)
     {
         time_t  t = m_timestamp.in_sec();
 
         {
-            scoped_guard    guard(the_lock);
+            ptmtx_guard guard(gmtime_lock);
 
             tm*     ptm = localtime(&t);
 

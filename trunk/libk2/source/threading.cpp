@@ -262,7 +262,7 @@ k2::nonpublic::tls_ptr_impl::reset (void* p)
 
 struct k2::nonpublic::thread_cntx
 {
-    enum exec_state_enum
+    enum state_enum
     {
         initializing,
         running,
@@ -287,8 +287,8 @@ struct k2::nonpublic::thread_cntx
 
     //  Members need synchronizations.
     k2::mutex           m_mtx;
-    k2::cond_var        m_exec_state_change_cv;
-    exec_state_enum     m_exec_state;
+    k2::cond_var        m_state_change_cv;
+    state_enum          m_state;
     exit_cause_enum     m_exit_cause;
     bool                m_cancel_enabled;
 
@@ -296,8 +296,8 @@ struct k2::nonpublic::thread_cntx
     :   m_thread_entry(thread_entry)
     ,   m_arg(arg)
     ,   m_detached(detached)
-    ,   m_exec_state_change_cv(m_mtx)
-    ,   m_exec_state(initializing)
+    ,   m_state_change_cv(m_mtx)
+    ,   m_state(initializing)
     ,   m_exit_cause(na)
     ,   m_cancel_enabled(true)
     {
@@ -309,13 +309,31 @@ struct k2::nonpublic::thread_cntx
 
 namespace
 {
-    inline k2::nonpublic::thread_cntx*&
+    /*
+    thread_cntx*&
     thread_specific_cntx_ptr ()
     {
         return  k2::thread_local_singleton<
             k2::nonpublic::thread_cntx*,
             k2::singleton::lifetime_long + 1>::instance();
     }
+    */
+
+#define K2_USE_SINGLETON
+#if defined (K2_USE_SINGLETON)
+    k2::tls_ptr<k2::nonpublic::thread_cntx>&
+    get_tls_cntx ()
+    {
+        return  k2::singleton<k2::tls_ptr<k2::nonpublic::thread_cntx> >::instance();
+    }
+#else
+    k2::tls_ptr<k2::nonpublic::thread_cntx>&
+    get_tls_cntx ()
+    {
+        static k2::tls_ptr<k2::nonpublic::thread_cntx>  tls_cntx;
+        return  tls_cntx;
+    }
+#endif
 }   //  namespace
 
 k2::nonpublic::thread_cntx*
@@ -344,9 +362,9 @@ k2::thread::spawn_impl (
 
     {
         mutex::scoped_guard guard(pcntx->m_mtx);
-        while (pcntx->m_exec_state == thread_cntx::initializing)
+        while (pcntx->m_state == thread_cntx::initializing)
         {
-            pcntx->m_exec_state_change_cv.wait();
+            pcntx->m_state_change_cv.wait();
         }
     }
 
@@ -367,19 +385,17 @@ k2::thread::pthread_entry_wrapper (void* arg)
 {
     typedef nonpublic::thread_cntx  thread_cntx;
 
-    std::auto_ptr<thread_cntx>  pcntx(static_cast<thread_cntx*>(arg));
-    bool    has_current_thread = false;
+    thread_cntx*    pcntx(reinterpret_cast<thread_cntx*>(arg));
 
     try
     {
         {
             mutex::scoped_guard guard(pcntx->m_mtx);
 
-            pcntx->m_exec_state = thread_cntx::running;
-            pcntx->m_exec_state_change_cv.signal();
+            pcntx->m_state = thread_cntx::running;
+            pcntx->m_state_change_cv.signal();
 
-            thread_specific_cntx_ptr() = pcntx.get();
-            has_current_thread = true;
+            get_tls_cntx().reset(pcntx);
         }
 
         pcntx->m_thread_entry(pcntx->m_arg);
@@ -397,25 +413,24 @@ k2::thread::pthread_entry_wrapper (void* arg)
     }
 
     {
+        //  no more reference needed.
+        get_tls_cntx().release();
+
         mutex::scoped_guard guard(pcntx->m_mtx);
-        pcntx->m_exec_state = thread_cntx::exited;
+        pcntx->m_state = thread_cntx::exited;
 
         //  If this dieing thread is in detached state.
         if (pcntx->m_detached == true)
         {
+            //  deletes pcntx when goes out of scope,
+            //  safer than using delete after pthread_detach().
+            std::auto_ptr<thread_cntx>  guard(pcntx);
             pthread_detach(pcntx->m_handle);
-            pcntx.reset();
         }
         else
         {
-            if (has_current_thread)
-                thread_specific_cntx_ptr() = 0;
-
-            pcntx->m_exec_state_change_cv.signal();
-
-            //  Release the ownership of the controlled pointer.
-            //  Leave cleanup to thread object's destroctor.
-            pcntx.release();
+            //  Signal the CV, thread's destructor might be waiting.
+            pcntx->m_state_change_cv.signal();
         }
     }
     return  0;
@@ -424,9 +439,12 @@ k2::thread::pthread_entry_wrapper (void* arg)
 
 k2::thread::~thread ()
 {
+    typedef nonpublic::thread_cntx  thread_cntx;
+    //  deletes pcntx when goes out of scope,
+    //  safer than using delete after pthread_join().
+    std::auto_ptr<thread_cntx>  guard(m_pcntx);
     this->join();
     pthread_join(m_pcntx->m_handle, 0);
-    delete  m_pcntx;
 }
 void
 k2::thread::cancel ()
@@ -435,8 +453,8 @@ k2::thread::cancel ()
 
     mutex::scoped_guard guard(m_pcntx->m_mtx);
 
-    if (m_pcntx->m_exec_state != thread_cntx::exited)
-        m_pcntx->m_exec_state = thread_cntx::cancel_pending;
+    if (m_pcntx->m_state != thread_cntx::exited)
+        m_pcntx->m_state = thread_cntx::cancel_pending;
 }
 void
 k2::thread::join ()
@@ -444,9 +462,9 @@ k2::thread::join ()
     typedef nonpublic::thread_cntx  thread_cntx;
 
     mutex::scoped_guard guard(m_pcntx->m_mtx);
-    while (m_pcntx->m_exec_state != thread_cntx::exited)
+    while (m_pcntx->m_state != thread_cntx::exited)
     {
-        m_pcntx->m_exec_state_change_cv.wait();
+        m_pcntx->m_state_change_cv.wait();
     }
 }
 bool
@@ -455,9 +473,9 @@ k2::thread::join (const timestamp& timer)
     typedef nonpublic::thread_cntx  thread_cntx;
 
     mutex::scoped_guard guard(m_pcntx->m_mtx);
-    if (m_pcntx->m_exec_state != thread_cntx::exited)
+    if (m_pcntx->m_state != thread_cntx::exited)
     {
-        if (m_pcntx->m_exec_state_change_cv.wait(timer) == true)
+        if (m_pcntx->m_state_change_cv.wait(timer) == true)
             return  true;
         else
             return  false;
@@ -470,7 +488,8 @@ k2::thread::cancel_enabled (bool yesno)
 {
     typedef nonpublic::thread_cntx  thread_cntx;
 
-    thread_cntx*    pcntx = thread_specific_cntx_ptr();
+    //thread_cntx*    pcntx = thread_specific_cntx_ptr();
+    thread_cntx*    pcntx = get_tls_cntx().get();
     if (pcntx == 0)
         return  false;
 
@@ -485,12 +504,13 @@ k2::thread::test_cancel ()
 {
     typedef nonpublic::thread_cntx  thread_cntx;
 
-    thread_cntx*    pcntx = thread_specific_cntx_ptr();
+    //thread_cntx*    pcntx = thread_specific_cntx_ptr();
+    thread_cntx*    pcntx = get_tls_cntx().get();
     if (pcntx == 0)
         return;
 
     mutex::scoped_guard guard(pcntx->m_mtx);
-    if (pcntx->m_exec_state == thread_cntx::cancel_pending)
+    if (pcntx->m_state == thread_cntx::cancel_pending)
         throw   thread::cancel_signal();
 }
 

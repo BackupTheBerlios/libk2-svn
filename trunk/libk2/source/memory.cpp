@@ -27,15 +27,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <k2/bits/auto_alloc.h>
+#include <k2/bits/pool_alloc.h>
 #include <k2/memory.h>
 
 #if !defined(K2_INLINE_AUTO_ALLOC)
-#   ifndef  K2_BITS_COMPILER_H
-#       include <k2/bits/compiler.h>
-#   endif
-#   if defined(K2_COMPILER_MSVC)
+#   include <k2/bits/os.h>
+#   if defined(K2_OS_WIN32)
 #       include <malloc.h>
-#   elif defined(K2_COMPILER_GCC)
+#   elif defined(K2_OS_UNIX)
 #       include <alloca.h>
 #   endif
 #endif
@@ -45,6 +44,14 @@
     void* k2::auto_alloc (size_t bytes)
     {
         return  alloca(bytes);
+    }
+
+    k2::shared_pool<128, 128>::allocator<int>   alloc;
+
+    void foo ()
+    {
+        int* p = alloc.allocate(1);
+        alloc.deallocate(p, 1);
     }
 
 #endif
