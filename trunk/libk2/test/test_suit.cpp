@@ -25,7 +25,6 @@
 #include <k2/timing.h>
 #include <k2/ipv4_tcp.h>
 #include <k2/ipv4_udp.h>
-#include <k2/socket_error.h>
 #include <k2/singleton.h>
 #include <k2/allocator.h>
 
