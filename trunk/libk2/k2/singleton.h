@@ -254,6 +254,125 @@ namespace k2
         }
     };
 
+#if(0)
+
+
+    template <init_type_>
+    struct local_static_traits
+    {
+        static const
+    };
+
+   template <typename method_traits_>
+    class singleton
+    {
+    public:
+        template <typename value_type_>
+        static value_type_& instance ()
+        {
+            static instance_type static_local_instance;
+            return  static_local_instance;
+        }
+    };
+
+    class local_static_tag
+    {
+    };
+
+    template <typename method_tag_, typename init_>
+    class singleton
+    {
+    public:
+        explicit singleton (init_ v)
+        :   m_init(v)
+        ,   m_instance(0)
+        {
+        }
+
+
+
+    private:
+
+    };
+    template <>
+    class singleton<local_static_tag>
+    {
+    public:
+        singleton (
+        template <typename value_type_>
+        static value_type_& instance ()
+        {
+            static instance_type static_local_instance;
+            return  static_local_instance;
+        }
+    };
+
+    class singleton_using_local_static
+    {
+    public:
+        template <typename value_type_>
+        static value_type_& instance ()
+        {
+            static instance_type static_local_instance;
+            return  static_local_instance;
+        }
+    };
+
+
+
+
+
+
+    class local_static_set
+    {
+    public:
+        template <typename value_type_>
+        static value_type_& instance ()
+        {
+            static instance_type static_local_instance;
+            return  static_local_instance;
+        }
+    };
+
+#if !defined(DOXYGEN_BLIND)
+    namespace nonpublic
+    {
+        template <typename instance_tag_, typename value_type_>
+        class class_static_instanciator
+        {
+        public:
+            static  value_type_ instance;
+        };
+        template <typename instance_tag_, typename value_type_>
+        class_static_instanciator<instance_tag_, value_type_>::value_type_
+        class_static_instanciator<instance_tag_, value_type_>::instance;
+    }   //  namespace nonpublic
+#endif  //  !DOXYGEN_BLIND
+
+    template <typename instance_tag_ = global_tag>
+    class class_static_set
+    {
+    public:
+        template <typename value_type_>
+        static value_type_& instance ()
+        {
+            return  nonpublic::class_static_instanciator<instance_tag_, value_type_>::instance;
+        }
+    };
+
+    template <typename instance_t_, singleton::lifetime_t lifetime_ = singleton::lifetime_normal>
+    class process_singleton
+
+    bar& foo ()
+    {
+        local_static_set<>::instance<bar> instance;
+        return  instance();
+
+        static  class_instance
+    }
+
+#endif
+
 }   //  namespace k2
 
 #endif  //  K2_SINGLETON_H

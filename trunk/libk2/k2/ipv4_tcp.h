@@ -50,8 +50,38 @@ namespace k2
 
     /** \defgroup   Networking
     */
+
+    namespace ipv4ex
+    {
+        using ipv4::interface_addr;
+        using ipv4::transport_addr;
+
+        class tcp_local_binding
+        {
+        public:
+            K2_INJECT_COPY_BOUNCER();
+
+            K2_DLSPEC explicit tcp_local_binding (const transport_addr&);
+            K2_DLSPEC ~tcp_local_binding ();
+
+        private:
+            socket_desc m_desc;
+        };
+    }
     namespace ipv4
     {
+
+        class tcp_local_binding
+        {
+        public:
+            K2_INJECT_COPY_BOUNCER();
+
+            K2_DLSPEC explicit tcp_local_binding (const transport_addr&);
+            K2_DLSPEC ~tcp_local_binding ();
+
+        private:
+            socket_desc m_desc;
+        };
 
         class tcp_transport;
 

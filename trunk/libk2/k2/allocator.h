@@ -57,17 +57,17 @@ namespace k2
     /**
     *   \brief A class template to help implementing allocators.
     */
-    template <typename value_type_>
+    template <typename T>
     class allocator_base
     {
     public:
-        typedef value_type_         value_type;
-        typedef size_t              size_type;
-        typedef ptrdiff_t           difference_type;
-        typedef const value_type_*  const_pointer;
-        typedef value_type_*        pointer;
-        typedef const value_type_&  const_reference;
-        typedef value_type_&        reference;
+        typedef T           value_type;
+        typedef size_t      size_type;
+        typedef ptrdiff_t   difference_type;
+        typedef const T*    const_pointer;
+        typedef T*          pointer;
+        typedef const T&    const_reference;
+        typedef T&          reference;
 
         size_type   max_size () const
         {
@@ -94,17 +94,17 @@ namespace k2
     class allocator_base<void>
     {
     public:
-        typedef void                value_type;
-        typedef size_t              size_type;
-        typedef ptrdiff_t           difference_type;
-        typedef const void*         const_pointer;
-        typedef void*               pointer;
+        typedef void        value_type;
+        typedef size_t      size_type;
+        typedef ptrdiff_t   difference_type;
+        typedef const void* const_pointer;
+        typedef void*       pointer;
     };
 
     /**
     *   \brief A Standard Allocator-compliant class template.
     *
-    *   Its first template parameter \b value_type_ has the same sematic
+    *   Its first template parameter \b T has the same sematic
     *   meaning of the first template parameter of std::allocator class tmeplate.
     *
     *   Allocations made through object instances of local_allocator<> are on
@@ -113,25 +113,25 @@ namespace k2
     *   fastest). Only use it when you need extream performance and know what
     *   "allocation on the stack" means and its consequences.
     */
-    template <typename value_type_>
+    template <typename T>
     class local_allocator
-    :   public allocator_base<value_type_>
+    :   public allocator_base<T>
     {
     public:
-        template <typename other_value_type_>
+        template <typename other_T>
         struct rebind
         {
-            typedef local_allocator<other_value_type_>  other;
+            typedef local_allocator<other_T>  other;
         };
 
         local_allocator () {}
         local_allocator (const local_allocator<value_type>&) {}
-        template <typename other_value_type_>
-        local_allocator (const local_allocator<other_value_type_>&) {}
+        template <typename other_T>
+        local_allocator (const local_allocator<other_T>&) {}
         ~local_allocator () {}
 
-        template <typename other_value_type_>
-        local_allocator& operator= (const local_allocator<other_value_type_>&)
+        template <typename other_T>
+        local_allocator& operator= (const local_allocator<other_T>&)
         {
             return  *this;
         }
@@ -150,19 +150,19 @@ namespace k2
     :   public allocator_base<void>
     {
     public:
-        template <typename other_value_type_>
+        template <typename other_T>
         struct rebind
         {
-            typedef local_allocator<other_value_type_>  other;
+            typedef local_allocator<other_T>  other;
         };
     };
-    template <typename lhs_value_type_, typename rhs_value_type_>
-    bool operator== (const local_allocator<lhs_value_type_>&, const local_allocator<rhs_value_type_>&)
+    template <typename lhs_T, typename rhs_T>
+    bool operator== (const local_allocator<lhs_T>&, const local_allocator<rhs_T>&)
     {
         return  true;
     }
-    template <typename lhs_value_type_, typename rhs_value_type_>
-    bool operator!= (const local_allocator<lhs_value_type_>&, const local_allocator<rhs_value_type_>&)
+    template <typename lhs_T, typename rhs_T>
+    bool operator!= (const local_allocator<lhs_T>&, const local_allocator<rhs_T>&)
     {
         return  false;
     }
@@ -380,8 +380,8 @@ namespace k2
                 typedef class_singleton<
                     pool_sharing_helper,
                     pool_init_helper>
-                    shared_pool;
-                return  shared_pool::instance().m_pool;
+                    shared_mem_pool;
+                return  shared_mem_pool::instance().m_pool;
             }
         };
     }   //  namespace nonpublic
@@ -393,12 +393,12 @@ namespace k2
     *   Object instances try to share the same underlying singleton instance
     *   of pool_tmpl_<pool_init_arg_,
     *   safe_alignof<pool_chunk_size_>::value, threading_>.
-    *   They do so by not considering value_type_ and compile-time compute
+    *   They do so by not considering T and compile-time compute
     *   safe_alignof<pool_chunk_size_>::value, which made sure where
-    *   value_type_ s compute the same alignment could share the same pool
+    *   T s compute the same alignment could share the same pool
     *   object instance.
     *
-    *   Its first parameter, a template parameter \b value_type_ has the same
+    *   Its first parameter, a template parameter \b T has the same
     *   sematic meaning of the first template parameter of std::allocator
     *   class tmeplate.
     *
@@ -411,13 +411,13 @@ namespace k2
     *   instances of pool_tmpl_<>.
     */
     template <
-        typename value_type_,
+        typename T,
         size_t  pool_init_arg_,
         template <size_t, bool> class pool_tmpl_,
         size_t  pool_chunk_size_ = sizeof(value_type),
         bool    threading_ = true>
     class pool_allocator
-    :   public allocator_base<value_type_>
+    :   public allocator_base<T>
     {
     private:
         typedef pool_allocator<
@@ -433,14 +433,14 @@ namespace k2
             pool_tmpl_,
             pool_chunk_size_,
             threading_>
-            shared_pool;
+            shared_mem_pool;
 
     public:
-        template <typename other_value_type_>
+        template <typename other_T>
         struct rebind
         {
             typedef pool_allocator<
-                other_value_type_,
+                other_T,
                 pool_init_arg_,
                 pool_tmpl_,
                 pool_chunk_size_,
@@ -450,22 +450,22 @@ namespace k2
 
         pool_allocator () {}
         pool_allocator (const self_type&) {}
-        template <typename other_value_type_>
-        pool_allocator (const typename rebind<other_value_type_>::other&) {}
+        template <typename other_T>
+        pool_allocator (const typename rebind<other_T>::other&) {}
         ~pool_allocator () {}
 
-        template <typename other_value_type_>
-        pool_allocator& operator= (const typename rebind<other_value_type_>::other&)
+        template <typename other_T>
+        pool_allocator& operator= (const typename rebind<other_T>::other&)
         {
         }
 
         pointer allocate (size_type count, const void* hint = 0)
         {
-            return  reinterpret_cast<pointer>(shared_pool::instance().allocate(count * sizeof(value_type)));
+            return  reinterpret_cast<pointer>(shared_mem_pool::instance().allocate(count * sizeof(value_type)));
         }
         void deallocate (pointer p, size_type count)
         {
-            shared_pool::instance().deallocate(p, count * sizeof(value_type));
+            shared_mem_pool::instance().deallocate(p, count * sizeof(value_type));
         }
     };
     template <
@@ -482,11 +482,11 @@ namespace k2
     :   public allocator_base<void>
     {
     public:
-        template <typename other_value_type_>
+        template <typename other_T>
         struct rebind
         {
             typedef pool_allocator<
-                other_value_type_,
+                other_T,
                 pool_init_arg_,
                 pool_tmpl_,
                 pool_chunk_size_,
@@ -495,21 +495,21 @@ namespace k2
         };
     };
     template <
-        typename lhs_value_type_,
-        typename rhs_value_type_,
+        typename lhs_T,
+        typename rhs_T,
         size_t  pool_init_arg_,
         template <size_t, size_t, bool> class pool_tmpl_,
         size_t  pool_chunk_size_,
         bool    threading_>
     bool operator== (
         const pool_allocator<
-            lhs_value_type_,
+            lhs_T,
             pool_init_arg_,
             pool_tmpl_,
             pool_chunk_size_,
             threading_>&,
         const pool_allocator<
-            rhs_value_type_,
+            rhs_T,
             pool_init_arg_,
             pool_tmpl_,
             pool_chunk_size_,
@@ -518,21 +518,21 @@ namespace k2
         return  true;
     }
     template <
-        typename lhs_value_type_,
-        typename rhs_value_type_,
+        typename lhs_T,
+        typename rhs_T,
         size_t  pool_init_arg_,
         template <size_t, size_t, bool> class pool_tmpl_,
         size_t  pool_chunk_size_,
         bool    threading_>
     bool operator!= (
         const pool_allocator<
-            lhs_value_type_,
+            lhs_T,
             pool_init_arg_,
             pool_tmpl_,
             pool_chunk_size_,
             threading_>&,
         const pool_allocator<
-            rhs_value_type_,
+            rhs_T,
             pool_init_arg_,
             pool_tmpl_,
             pool_chunk_size_,
@@ -551,7 +551,7 @@ namespace k2
     *   same \b pool_type_ are just wrapper of comparison of user specified pool
     *   instances.
     *
-    *   Its first parameter, a template parameter \b value_type_ has the same
+    *   Its first parameter, a template parameter \b T has the same
     *   sematic meaning of the first template parameter of std::allocator
     *   class tmeplate.
     *
@@ -564,12 +564,12 @@ namespace k2
     *   instances of pool_tmpl_<>.
     */
     template <
-        typename value_type_,
+        typename T,
         template <size_t, bool> class pool_tmpl_,
         size_t  pool_chunk_size_ = sizeof(value_type),
         bool    threading_ = true>
     class pool_allocator_adapter
-    :   public allocator_base<value_type_>
+    :   public allocator_base<T>
     {
     private:
         typedef pool_allocator_adapter<
@@ -583,11 +583,11 @@ namespace k2
         pool_type* m_pool;
 
     public:
-        template <typename other_value_type_>
+        template <typename other_T>
         struct rebind
         {
             typedef pool_allocator_adapter<
-                other_value_type_,
+                other_T,
                 pool_tmpl_,
                 pool_chunk_size_,
                 threading_>
@@ -598,12 +598,12 @@ namespace k2
         :   m_pool(&pool) {}
         pool_allocator_adapter (const self_type& rhs)
         :   m_pool(&rhs.get_pool()) {}
-        template <typename other_value_type_>
-        pool_allocator_adapter (const typename rebind<other_value_type_>::other&)
+        template <typename other_T>
+        pool_allocator_adapter (const typename rebind<other_T>::other&)
         :   m_pool(&rhs.get_pool()) {}
 
-        template <typename other_value_type_>
-        pool_allocator_adapter& operator= (const typename rebind<other_value_type_>::other& rhs)
+        template <typename other_T>
+        pool_allocator_adapter& operator= (const typename rebind<other_T>::other& rhs)
         {
             m_pool = &rhs.get_pool();
         }
@@ -638,11 +638,11 @@ namespace k2
     :   public allocator_base<void>
     {
     public:
-        template <typename other_value_type_>
+        template <typename other_T>
         struct rebind
         {
             typedef pool_allocator_adapter<
-                other_value_type_,
+                other_T,
                 pool_tmpl_,
                 pool_chunk_size_,
                 threading_>
@@ -650,19 +650,19 @@ namespace k2
         };
     };
     template <
-        typename lhs_value_type_,
-        typename rhs_value_type_,
+        typename lhs_T,
+        typename rhs_T,
         template <size_t, size_t, bool> class pool_tmpl_,
         size_t  pool_chunk_size_,
         bool    threading_>
     bool operator== (
         const pool_allocator_adapter<
-            lhs_value_type_,
+            lhs_T,
             pool_tmpl_,
             pool_chunk_size_,
             threading_>& lhs,
         const pool_allocator_adapter<
-            rhs_value_type_,
+            rhs_T,
             pool_tmpl_,
             pool_chunk_size_,
             threading_>& rhs)
@@ -670,19 +670,19 @@ namespace k2
         return  &lhs.get_pool() == &rhs.get_pool();
     }
     template <
-        typename lhs_value_type_,
-        typename rhs_value_type_,
+        typename lhs_T,
+        typename rhs_T,
         template <size_t, size_t, bool> class pool_tmpl_,
         size_t  pool_chunk_size_,
         bool    threading_>
     bool operator!= (
         const pool_allocator_adapter<
-            lhs_value_type_,
+            lhs_T,
             pool_tmpl_,
             pool_chunk_size_,
             threading_>& lhs,
         const pool_allocator_adapter<
-            rhs_value_type_,
+            rhs_T,
             pool_tmpl_,
             pool_chunk_size_,
             threading_>& rhs)
@@ -691,11 +691,11 @@ namespace k2
     }
 
     template <
-        typename value_type_,
+        typename T,
         size_t  pool_chunk_size_,
         bool    threading_>
     pool_allocator_adapter<
-        value_type_,
+        T,
         static_pool,
         pool_chunk_size_,
         threading_>
@@ -705,17 +705,17 @@ namespace k2
             threading_>& pool)
     {
         return  pool_allocator_adapter<
-            value_type_,
+            T,
             static_pool,
             pool_chunk_size_,
             threading_>(pool);
     }
     template <
-        typename value_type_,
+        typename T,
         size_t  pool_chunk_size_,
         bool    threading_>
     pool_allocator_adapter<
-        value_type_,
+        T,
         dynamic_pool,
         pool_chunk_size_,
         threading_>
@@ -725,11 +725,342 @@ namespace k2
             threading_>& pool)
     {
         return  pool_allocator_adapter<
-            value_type_,
+            T,
             dynamic_pool,
             pool_chunk_size_,
             threading_>(pool);
     }
+
+#if(0)
+
+    template <typename char_type_>
+    class static_char_traits;
+
+    template <>
+    class static_char_traits<char>
+    {
+    public:
+        typedef char_type_  char_type;
+        typedef
+    };
+
+    class static_string_a
+
+
+    template <bool thread_safe_>
+    class mem_pool
+    {
+    public:
+        template <typename T>
+        class allocator_adapter
+        :   public allocator_base<T>
+        {
+        public:
+            template <typename other_>
+            struct rebind
+            {
+                typedef allocator_adapter<other_>   other;
+            };
+            allocator_adapter ()
+            {
+            }
+            explicit allocator_adapter (mem_pool& pool)
+            :   m_pool_ptr(&pool)
+            {
+            }
+            allocator_adapter (const allocator_adapter& alloc)
+            :   m_pool_ptr(&m_alloc.pool())
+            {
+            }
+            pointer allocate (size_type n, void* /*hint*/)
+            {
+                if(m_pool_ptr == 0)
+                    throw   std::bad_alloc("No memory pool");
+                if(m_pool_ptr == 0 || m_pool_ptr->chunk_bytes() < n * sizeof(value_type))
+                    throw   std::bad_alloc("Allocation too large for memory pool");
+                pointer p = reinterpret_cast<pointer>(m_pool_ptr.allocate();
+                if(p == 0)
+                    throw   std::bad_alloc("Memory pool exhausted");
+                return  p;
+            }
+            template <typename other_>
+            allocator_adapter&  operator = (const allocator_adapter<other_>& alloc)
+            {
+                m_pool_ptr = &alloc.pool();
+                return  *this;
+            }
+            void    deallocate (pointer p, size_type /*n*/)
+            {
+                assert(m_pool_ptr);
+                m_pool_ptr->deallocate(p);
+            }
+            size_type   max_size () const
+            {
+                return  (m_pool_ptr ? m_pool_ptr->chunk_bytes() / sizeof(value_type) : 0);
+            }
+
+        protected:
+            mem_pool&   pool () const
+            {
+                return  *m_pool;
+            }
+        private:
+            mem_pool<thread_safe_>* m_pool_ptr;
+        };
+
+        template <typename T>
+        class allocator
+        :   public allocator_base<T>
+        {
+        public:
+            template <size_t ChunkCount>
+            struct instance;
+            struct adapter;
+        };
+        template <size_t Chunks>
+        struct transform
+        {
+            template <typename T>
+            class allocator
+            :   public allocator_base<T>
+            {
+            public:
+                template <typename other_>
+                struct rebind
+                {
+                    typedef allocator<other_>   other;
+                };
+                allocator ()
+                :   m_pool_ptr(0)
+                {
+                }
+                allocator (const allocator& alloc)
+                :   m_pool_ptr(&m_alloc.pool())
+                {
+                }
+                explicit allocator (mem_pool& pool)
+                :   m_pool_ptr(&pool)
+                {
+                }
+                pointer allocate (size_type n, void* /*hint*/)
+                {
+                    if(m_pool_ptr == 0)
+                        throw   std::bad_alloc("No memory pool");
+                    if(m_pool_ptr == 0 || m_pool_ptr->chunk_bytes() < n * sizeof(value_type))
+                        throw   std::bad_alloc("Allocation too large for memory pool");
+                    pointer p = reinterpret_cast<pointer>(m_pool_ptr.allocate();
+                    if(p == 0)
+                        throw   std::bad_alloc("Memory pool exhausted");
+                    return  p;
+                }
+                template <typename other_>
+                allocator&  operator = (const allocator<other_>& alloc)
+                {
+                    m_pool_ptr = &alloc.pool();
+                    return  *this;
+                }
+                void    deallocate (pointer p, size_type /*n*/)
+                {
+                    assert(m_pool_ptr);
+                    m_pool_ptr->deallocate(p);
+                }
+                size_type   max_size () const
+                {
+                    return  (m_pool_ptr ? m_pool_ptr->chunk_bytes() / sizeof(value_type) : 0);
+                }
+
+            protected:
+                mem_pool&   pool () const
+                {
+                    return  m_pool;
+                }
+            private:
+                mem_pool<thread_safe_>  m_pool;
+            };
+        };
+        template <>
+        class allocator<void>
+        :   public allocator_base<void>
+        {
+        public:
+            template <typename other_>
+            struct rebind
+            {
+                typedef allocator<other_>   other;
+            };
+        };
+
+
+        K2_INJECT_COPY_BOUNCER();
+
+        mem_pool (size_t chunk_count, size_t chunk_bytes);
+        :   m_mem(0)
+        ,   m_frees(0)
+        ,   m_chunk_bytes(chunk_bytes)
+        {
+            size_t  safe_align = get_safe_align(chunk_bytes);
+            m_mem = new char[chunk_count * safe_align];
+
+            size_t idx = 0;
+            for (; idx < chunk_count; idx++)
+                this->deposit(m_mem + idx * safe_align);
+        }
+
+        ~mem_pool ()
+        {
+            delete  [] m_mem;
+        }
+
+        void* allocate ()
+        {
+            scoped_guard    guard(m_lock);
+
+            if (m_frees == 0)
+                return  0;
+
+            chunk*  pchunk = m_frees;
+            m_frees = m_frees->pnext;
+            return  pchunk;
+        }
+        void deallocate (void* p)
+        {
+            scoped_guard    guard(m_lock);
+            this->deposit(p);
+        }
+        size_t  chunk_bytes () const
+        {
+            return  m_chunk_bytes;
+        }
+
+    private:
+        void deposit (void* p)
+        {
+            chunk* pchunk = reinterpret_cast<chunk*>(p);
+            pchunk->pnext = m_frees;
+            m_frees = pchunk;
+        }
+        union chunk
+        {
+            chunk*  pnext;
+        };
+
+        typedef fast_lock<thread_safe_>     lock;
+        typedef typename lock::scoped_guard scoped_guard;
+        lock    m_lock;
+        size_t  m_chunk_count;
+        char*   m_mem;
+        chunk*  m_frees;
+
+    };
+
+
+    //template <size_t chunk_count_, size_t chunk_size_, typename instance_tag_ = global_tag>
+    template <size_t chunk_count_, size_t chunk_bytes_, typename instance_tag_ = global_tag>
+    class shared_mem_pool
+    {
+    private:
+        struct pool
+        {
+            pool ()
+            :   shared(chunk_count_, chunk_bytes_)
+            {
+            }
+            mem_pool    shared;
+        };
+        shared
+        process_singleton<shared>    process_shared;
+    public:
+
+        template <template <> class singleton_tmpl_>
+        class shared
+        {
+        public:
+            static const pool&  instance () const;
+            static pool&        instance ();
+
+            template <typename T>
+            class allocator
+            {
+            public:
+                typedef T value_type;
+
+                pointer allocate (size_type n, void* /*hint*/ = 0)
+                {
+                    return  reinterpret_cast<pointer>(instance().allocate(n * sizeof(value_type)));
+                }
+                void    deallocate (pointer p, size_type n)
+                {
+                    instance().deallocate(p, n * sizeof(value_type));
+                }
+        };
+
+        template <typename T>
+        class allocator
+        {
+        public:
+            typedef T value_type;
+
+            pointer allocate (size_type n, void* /*hint*/ = 0)
+            {
+                return  reinterpret_cast<pointer>(shared_instance().allocate(n * sizeof(value_type)));
+            }
+            void    deallocate (pointer p, size_type n)
+            {
+                shared_instance().deallocate(p, n * sizeof(value_type));
+            }
+        };
+    };
+
+    template <typename base_, typename alloc_>
+    //template <typename base_, template <> alloc_tmpl_>
+    //template <typename base_>
+    struct object_factory
+    {
+    public:
+        typedef base_   base_type;
+        typedef base_*  base_pointer;
+        typedef alloc_  allocator_type;
+
+        object_factory ();
+        ~object_factory ();
+
+        template <typename derived_>
+        base_pointer    create ()
+        {
+            alloc_tmpl_<derived_>
+            return  new derived_;
+        }
+        template <typename derived_, typename arg_>
+        base_pointer    create (arg_ v)
+        {
+            return  new derived_(v);
+        }
+        void            destroy (base_pointer p)
+        {
+            delete  p;
+        }
+
+    private:
+        allocator_type  m_alloc;
+    };
+
+    template <typename value_>
+    struct noop_destroy_policy
+    {
+        void opeartor (value_)
+        {
+        }
+    };
+    template <typename value_>
+    struct delete_destroy_policy
+    {
+        void opeartor (value_ v)
+        {
+            delete v;
+        }
+    };
+
+#endif
 
 }   //  namespace k2
 

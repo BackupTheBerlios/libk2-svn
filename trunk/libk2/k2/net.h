@@ -30,7 +30,7 @@
 #ifndef K2_CONFIG_H
 #   include <k2/config.h>
 #endif
-#ifndef K2_TYPE_MANIP_H
+#ifndef K2_BYTE_MANIP_H
 #   include <k2/byte_manip.h>
 #endif
 #ifndef K2_COPY_BOUNCER_H
@@ -40,28 +40,28 @@
 namespace k2
 {
 
-    template <typename int_t_>
-    int_t_ netconv (int_t_ value)
+    template <typename Int>
+    Int netconv (Int value)
 #if defined(K2_BYTEORDER_BIGENDIAN)
     {
         //  Big-endian need no net-to-host/host-to-net conversion.
-        K2_STATIC_ASSERT(is_integer<int_t_>::value, value_is_not_integer);
+        K2_STATIC_ASSERT(is_integer<Int>::value, value_is_not_integer);
         return  value;
     }
 #else
     {
-        K2_STATIC_ASSERT(is_integer<int_t_>::value, value_is_not_integer);
-        return  nonpublic::netconv(value, integer_tag<size_t, sizeof(int_t_)>());
+        K2_STATIC_ASSERT(is_integer<Int>::value, value_is_not_integer);
+        return  nonpublic::netconv(value, integer_tag<size_t, sizeof(Int)>());
     }
 #endif
 
-    template <typename int_t_>
-    int_t_ net2host (int_t_ value)
+    template <typename Int>
+    Int net2host (Int value)
     {
         return  netconv(value);
     }
-    template <typename int_t_>
-    int_t_ host2net (int_t_ value)
+    template <typename Int>
+    Int host2net (Int value)
     {
         return  netconv(value);
     }
@@ -69,37 +69,96 @@ namespace k2
     typedef uint16_t    host16_t;
     typedef uint32_t    host32_t;
 
-
-    template <typename int_t_>
-    void net_encode (void*& buf, int_t_ val)
+    template <bool Aligned = false>
+    struct net_codec
     {
-        K2_STATIC_ASSERT(is_integer<int_t_>::value, value_is_not_integer);
-        uint8_t*        dst = reinterpret_cast<uint8_t*>(buf);
-        const uint8_t*  src = reinterpret_cast<const uint8_t*>(&val);
+        template <typename Int>
+        static Int fetch (const void* from)
+        {
+            Int   tmp;
+            std::copy(
+                reinterpret_cast<char*>(from),
+                reinterpret_cast<char*>(from) + sizeof(Int),
+                reinterpret_cast<char*>(&tmp));
 
-#if defined(K2_BYTEORDER_LITTLEENDIAN)
-        reverse_byteorder(val);
-#endif
+            return  net2host(tmp);
+        }
+        template <typename Int>
+        static void dump (void* to, Int val)
+        {
+            val = host2net(val);
 
-        std::copy(src, src + sizeof(val), dst);
-        buf = dst + sizeof(val);
+            std::copy(
+                reinterpret_cast<const char*>(&val),
+                reinterpret_cast<const char*>(&val + sizeof(Int)),
+                reinterpret_cast<char*>(to));
+        }
+    };
+    template <>
+    struct net_codec</*Aligned =*/ true>
+    {
+        template <typename Int>
+        static Int fetch (const void* from)
+        {
+            return  net2host(*reinterpret_cast<const Int*>(from));
+        }
+        template <typename Int>
+        static void dump (void* to, Int val)
+        {
+            *reinterpret_cast<Int*>(to) = host2net(val);
+        }
+    };
+
+    template <bool Aligned = false>
+    struct host_codec
+    {
+        template <typename Int>
+        static Int fetch (const void* from)
+        {
+            Int   tmp;
+            std::copy(
+                reinterpret_cast<char*>(from),
+                reinterpret_cast<char*>(from) + sizeof(Int),
+                reinterpret_cast<char*>(&tmp));
+
+            return  tmp;
+        }
+        template <typename Int>
+        static void dump (void* to, Int val)
+        {
+            std::copy(
+                reinterpret_cast<const char*>(&val),
+                reinterpret_cast<const char*>(&val + sizeof(Int)),
+                reinterpret_cast<char*>(to));
+        }
+    };
+    template <>
+    struct host_codec</*Aligned =*/ true>
+    {
+        template <typename Int>
+        static Int fetch (const void* from)
+        {
+            return  *reinterpret_cast<const Int*>(from);
+        }
+        template <typename Int>
+        static void dump (void* to, Int val)
+        {
+            *reinterpret_cast<Int*>(to) = val;
+        }
+    };
+
+    template <typename Codec, typename Int>
+    Int unserialize (const void*& from)
+    {
+        Int ret = Codec::fetch(from);
+        std::advance(reinterpret_cast<const char*&>(from), sizeof(Int));
+        return  ret;
     }
-
-    template <typename int_t_>
-    int_t_ net_decode (const void*& buf)
+    template <typename Codec, typename Int>
+    void serialize (void*& to, Int val)
     {
-        K2_STATIC_ASSERT(is_integer<int_t_>::value, value_is_not_integer);
-
-        const uint8_t*  src = reinterpret_cast<const uint8_t*>(buf);
-        int_t_          val;
-        uint8_t*        dst = reinterpret_cast<uint8_t*>(&val);
-
-        std::copy(src, src + sizeof(val), dst);
-#if defined(K2_BYTEORDER_LITTLEENDIAN)
-        reverse_byteorder(val);
-#endif
-        buf = src + sizeof(val);
-        return  val;
+        Codec::dump(to, val);
+        std::advance(reinterpret_cast<char*&>(from), sizeof(Int))
     }
 
 }   //  namespace k2
