@@ -33,8 +33,8 @@
 #   include <k2/type_manip.h>
 #endif
 
-#ifndef K2_BITS_ENDIAN_H
-#   include <k2/bits/endian.h>
+#ifndef K2_ENDIAN_H
+#   include <k2/endian.h>
 #endif
 #if !defined(K2_BYTE_ORDER)
 #   error "libk2 : No byte-order defined."

@@ -30,7 +30,7 @@
 #define K2_IPV4_ADDR_H
 
 #ifndef K2_BITES_DLSPEC_H
-#   include <k2/bits/dlspec.h>
+#   include <k2/dlspec.h>
 #endif
 #ifndef K2_STDINT_H
 #   include <k2/stdint.h>

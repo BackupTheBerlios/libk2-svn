@@ -29,11 +29,11 @@
 #ifndef K2_THREAD_ONCE_H
 #define K2_THREAD_ONCE_H
 
-#ifndef K2_BITS_DLSPEC_H
-#   include <k2/bits/dlspec.h>
+#ifndef K2_DLSPEC_H
+#   include <k2/dlspec.h>
 #endif
-#ifndef K2_BITS_ATOMIC_H
-#   include <k2/bits/atomic.h>
+#ifndef K2_ATOMIC_H
+#   include <k2/atomic.h>
 #endif
 
 namespace k2

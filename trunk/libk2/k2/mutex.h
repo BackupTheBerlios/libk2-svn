@@ -29,14 +29,14 @@
 #ifndef K2_MUTEX_H
 #define K2_MUTEX_H
 
-#ifndef K2_BITS_DLSPEC_H
-#   include <k2/bits/dlspec.h>
+#ifndef K2_DLSPEC_H
+#   include <k2/dlspec.h>
 #endif
-#ifndef K2_BITS_COPY_BOUNCER_H
-#   include <k2/bits/copy_bouncer.h>
+#ifndef K2_COPY_BOUNCER_H
+#   include <k2/copy_bouncer.h>
 #endif
-#ifndef K2_BITS_SCOPE_GUARD_H
-#   include <k2/bits/scoped_guard.h>
+#ifndef K2_SCOPE_GUARD_H
+#   include <k2/scoped_guard.h>
 #endif
 
 namespace k2

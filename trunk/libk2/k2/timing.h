@@ -29,8 +29,8 @@
 #ifndef K2_TIMING_H
 #define K2_TIMING_H
 
-#ifndef K2_BITS_DLSPEC_H
-#   include <k2/bits/dlspec.h>
+#ifndef K2_DLSPEC_H
+#   include <k2/dlspec.h>
 #endif
 #ifndef K2_STDINT_H
 #   include <k2/stdint.h>

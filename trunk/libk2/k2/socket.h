@@ -32,11 +32,11 @@
 #ifndef K2_NET_H
 #   include <k2/net.h>
 #endif
-#ifndef K2_BITS_DLSPEC_H
-#   include <k2/bits/dlspec.h>
+#ifndef K2_DLSPEC_H
+#   include <k2/dlspec.h>
 #endif
-#ifndef K2_BITS_COPY_BOUNCER_H
-#   include <k2/bits/copy_bouncer.h>
+#ifndef K2_COPY_BOUNCER_H
+#   include <k2/copy_bouncer.h>
 #endif
 #ifndef K2_EXCEPTION_H
 #   include <k2/exception.h>

@@ -16,7 +16,7 @@
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
@@ -26,33 +26,30 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef K2_DUMMY_LOCK_H
-#define K2_DUMMY_LOCK_H
+#ifndef K2_FAST_LOCK_H
+#define K2_FAST_LOCK_H
 
-#ifndef K2_BITS_COPY_BOUNCER_H
-#   include <k2/bits/copy_bouncer.h>
+#ifndef K2_SPIN_LOCK_H
+#   include <k2/spin_lock.h>
 #endif
-#ifndef K2_BITS_SCOPE_GUARD_H
-#   include <k2/scope_guard.h>
+#ifndef K2_DUMMY_LOCK_H
+#   include <k2/dummy_lock.h>
 #endif
 
 namespace k2
 {
 
-    class timestamp;
-
-    class dummy_lock
+    template <bool ThreadSafe = true>
+    struct fast_lock
     {
-    public:
-        K2_INJECT_COPY_BOUNCER();
-
-        typedef scoped_guard<dummy_lock>    scoped_guard;
-
-        void acquire () {}
-        bool acquire (const timestamp& timer) {return   true;}
-        void release () {}
+        typedef spin_lock   type;
+    };
+    template <>
+    struct fast_lock</*ThreadSafe =*/ false>
+    {
+        typedef dummy_lock  type;
     };
 
 }   //  namespace k2
 
-#endif  //  !K2_DUMMY_LOCK_H
+#endif  //  !K2_FAST_LOCK_H

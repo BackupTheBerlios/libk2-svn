@@ -26,30 +26,20 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef K2_BITS_FAST_LOCK_H
-#define K2_BITS_FAST_LOCK_H
+#ifndef K2_OPT_H
+#define K2_OPT_H
 
-#ifndef K2_BITS_SPIN_LOCK_H
-#   include <k2/bits/spin_lock.h>
+#if defined(__GNUC__)
+#   if  defined(K2_DISABLE_OPT_BRANCH)
+#       define  K2_OPT_BRANCH_TRUE(exp)     (long(exp))
+#       define  K2_OPT_BRANCH_FALSE(exp)    (long(exp))
+#   else
+#       define  K2_OPT_BRANCH_TRUE(exp)     (long(__builtin_expect(long(exp), long(1))))
+#       define  K2_OPT_BRANCH_FALSE(exp)    (long(__builtin_expect(long(exp), long(0))))
+#   endif
+#elif defined(_MSC_VER)
+#   define  K2_OPT_BRANCH_TRUE(exp)         (long(exp))
+#   define  K2_OPT_BRANCH_FALSE(exp)        (long(exp))
 #endif
-#ifndef K2_BITS_DUMMY_LOCK_H
-#   include <k2/bits/dummy_lock.h>
-#endif
 
-namespace k2
-{
-
-    template <bool ThreadSafe = true>
-    struct fast_lock
-    {
-        typedef spin_lock   type;
-    };
-    template <>
-    struct fast_lock</*ThreadSafe =*/ false>
-    {
-        typedef dummy_lock  type;
-    };
-
-}   //  namespace k2
-
-#endif  //  !K2_BITS_FAST_LOCK_H
+#endif  //  !K2_OPT_H

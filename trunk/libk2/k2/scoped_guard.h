@@ -16,7 +16,7 @@
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
@@ -26,21 +26,47 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef K2_BITS_ENDIAN_H
-#define K2_BITS_ENDIAN_H
+#ifndef K2_SCOPE_GUARD_H
+#define K2_SCOPE_GUARD_H
 
-#define K2_LITTLE_ENDIAN    1234
-#define K2_BIG_ENDIAN       4321
-#define K2_PDP_ENDIAN       3412
-#define K2_MID_ENDIAN       K2_PDP_ENDIAN
-
-#if !defined(K2_BYTE_ORDER)
-//  If byte order is not specified at compile time (-DK2_BYTE_ORDER=xxxx),
-//  try figuring it out.
-#   if defined (i386) || defined (__i386__) || defined (_M_IX86) || \
-        defined (vax) || defined (__alpha)
-#       define K2_BYTE_ORDER    K2_LITTLE_ENDIAN
-#   endif
+#ifndef K2_EXCEPTION_H
+#   include <k2/exception.h>
+#endif
+#ifndef K2_COPY_BOUNCER_H
+#   include <k2/copy_bouncer.h>
 #endif
 
-#endif  //  !K2_BITS_ENDIAN_H
+namespace k2
+{
+
+    class timestamp;
+
+    template <typename GuardedT>
+    class scoped_guard
+    {
+    public:
+        K2_INJECT_COPY_BOUNCER();
+
+        scoped_guard (GuardedT& guarded)
+        :   m_guarded(guarded)
+        {
+            m_guarded.acquire();
+        }
+        scoped_guard (GuardedT& guarded, const timestamp& timer)
+        :   m_guarded(guarded)
+        {
+            if (m_guarded.acquire(timer) == false)
+                throw   timedout_error();
+        }
+        ~scoped_guard ()
+        {
+            m_guarded.release();
+        }
+
+    private:
+        GuardedT&  m_guarded;
+    };
+
+}
+
+#endif  //  !K2_SCOPE_GUARD_H

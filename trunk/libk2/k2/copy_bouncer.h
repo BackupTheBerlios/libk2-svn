@@ -26,62 +26,46 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef K2_BITS_DEFALLC_BASE_H
-#define K2_BITS_DEFALLC_BASE_H
-
-#include <cstddef>
+#ifndef	K2_COPY_BOUNCER_H
+#define	K2_COPY_BOUNCER_H
 
 namespace k2
 {
 
-    /**
-    *   \brief A class template to help implementing allocators.
-    */
-    template <typename T>
-    class defalloc_base
-    {
-    public:
-        typedef T               value_type;
-        typedef size_t          size_type;
-        typedef std::ptrdiff_t  difference_type;
-        typedef const T*        const_pointer;
-        typedef T*              pointer;
-        typedef const T&        const_reference;
-        typedef T&              reference;
+	struct copy_bouncer
+	{
+		copy_bouncer () {}
 
-        size_type   max_size () const
-        {
-            return  safe_alignof::constant<sizeof(value_type)>::value>::value > size_type(-1) ?
-                size_type(-1) / safe_alignof<sizeof(value_type)>::value : 1;
-        }
-        void construct (pointer p, const_reference v)
-        {
-            new (p) value_type(v);
-        }
-        void destroy (pointer p)
-        {
-            p->~value_type();
-        }
-        const_pointer address (const_reference r)
-        {
-            return  &r;
-        }
-        pointer address (reference r)
-        {
-            return  &r;
-        }
-    };
-    template <>
-    class defalloc_base<void>
-    {
-    public:
-        typedef void        value_type;
-        typedef size_t      size_type;
-        typedef ptrdiff_t   difference_type;
-        typedef const void* const_pointer;
-        typedef void*       pointer;
-    };
+	private:
+		//	Deliberately not implemented.
+		copy_bouncer (
+			const copy_bouncer&);
+		copy_bouncer& operator= (const copy_bouncer&);
+	};
 
-}   //  namespace k2
+}	//	namespace k2
 
-#endif  //  !K2_BITS_DEFALLC_BASE_H
+/**	\defgroup	Utility
+*/
+
+/**
+*	\ingroup    Utility
+*	\brief      Macro that inserts a non-copyable member into a class.
+*/
+//  !kh!
+//  Although user may define K2_DISABLE_COPY_BOUNCER (save memory?),
+//  it's highly recommended not to do so.
+//  It's just not worth sacrificing the benifits to save sizeof(size_t)
+//  bytes in non-value-sematic objects.
+//  This option may be unavailable in future versions.
+//  The rationale of using this macro instead of using boost alike
+//  noncopyable is to avoid inheritance, this may not the best
+//  technique in most senarios, but it's my preferred practice.
+#if defined(K2_DISABLE_COPY_BOUNCER)
+#   define  K2_INJECT_COPY_BOUNCER()
+#else
+#   define	K2_INJECT_COPY_BOUNCER()\
+	    k2::copy_bouncer copy_bouncer
+#endif
+
+#endif	//	!K2_COPY_BOUNCER_H

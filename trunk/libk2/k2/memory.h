@@ -29,95 +29,61 @@
 #ifndef K2_MEMORY_H
 #define K2_MEMORY_H
 
-#ifndef K2_BITS_AUTO_ALLOC_H
-#   include <k2/bits/auto_alloc.h>
+#ifndef K2_STD_H_MEMORY
+#   define  K2_STD_H_MEMORY
+#   include <memory>
 #endif
 
 namespace k2
 {
 
     /**
-    *   \brief A Standard Allocator-compliant class template.
-    *
-    *   Its first template parameter \b ValueT has the same sematic
-    *   meaning of the first template parameter of std::allocator class tmeplate.
-    *
-    *   Allocations made through object instances of auto_allocator<> are on
-    *   the stack-frame.
-    *   This is probably close to the fastest allocation avaiable (if not the
-    *   fastest). Only use it when you need extream performance and know what
-    *   "allocation on the stack" means and its consequences.
+    *   \brief A class template to help implementing allocators.
     */
-    template <typename ValueT>
-    class auto_allocator
-    :   public defalloc_base<ValueT>
+    template <typename T>
+    class defalloc_base
     {
     public:
-        template <typename OtherT>
-        struct rebind
-        {
-            typedef auto_allocator<OtherT>  other;
-        };
+        typedef T               value_type;
+        typedef size_t          size_type;
+        typedef std::ptrdiff_t  difference_type;
+        typedef const T*        const_pointer;
+        typedef T*              pointer;
+        typedef const T&        const_reference;
+        typedef T&              reference;
 
-        auto_allocator () {}
-        auto_allocator (const auto_allocator<ValueT>&) {}
-        template <typename OtherT>
-        auto_allocator (const auto_allocator<OtherT>&) {}
-        ~auto_allocator () {}
-
-        template <typename OtherT>
-        auto_allocator& operator= (const auto_allocator<OtherT>&)
+        size_type   max_size () const
         {
-            return  *this;
+            return  safe_alignof::constant<sizeof(value_type)>::value>::value > size_type(-1) ?
+                size_type(-1) / safe_alignof<sizeof(value_type)>::value : 1;
         }
-
-        pointer allocate (size_type count, const void* hint = 0)
+        void construct (pointer p, const_reference v)
         {
-            return  reinterpret_cast<pointer>(bits::auto_alloc(sizeof(ValueT) * count));
+            new (p) value_type(v);
         }
-        void deallocate (pointer p, size_type n)
+        void destroy (pointer p)
         {
-            //  no-op.
+            p->~value_type();
+        }
+        const_pointer address (const_reference r)
+        {
+            return  &r;
+        }
+        pointer address (reference r)
+        {
+            return  &r;
         }
     };
     template <>
-    class auto_allocator<void>
-    :   public defalloc_base<void>
+    class defalloc_base<void>
     {
     public:
-        template <typename OtherT>
-        struct rebind
-        {
-            typedef auto_allocator<OtherT>  other;
-        };
+        typedef void        value_type;
+        typedef size_t      size_type;
+        typedef ptrdiff_t   difference_type;
+        typedef const void* const_pointer;
+        typedef void*       pointer;
     };
-    template <typename LhsT, typename RhsT>
-    bool operator== (const auto_allocator<LhsT>&, const auto_allocator<RhsT>&)
-    {
-        return  true;
-    }
-    template <typename LhsT, typename RhsT>
-    bool operator!= (const auto_allocator<LhsT>&, const auto_allocator<RhsT>&)
-    {
-        return  false;
-    }
-
-
-
-#if(0)
-    template <typename type_>
-    struct destroyer
-    {
-        explicit destroyer (type_* p)
-        :   m_p(p) {}
-
-        void operator() () const
-        {
-            delete  m_p;
-        }
-        type_*  m_p;
-    };
-    #endif
 
 }   //  namespace k2
 

@@ -16,7 +16,7 @@
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
- * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR 
  * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
  * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
@@ -26,46 +26,21 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef	K2_BITS_COPY_BOUNCER_H
-#define	K2_BITS_COPY_BOUNCER_H
+#ifndef K2_ENDIAN_H
+#define K2_ENDIAN_H
 
-namespace k2
-{
+#define K2_LITTLE_ENDIAN    1234
+#define K2_BIG_ENDIAN       4321
+#define K2_PDP_ENDIAN       3412
+#define K2_MID_ENDIAN       K2_PDP_ENDIAN
 
-	struct copy_bouncer
-	{
-		copy_bouncer () {}
-
-	private:
-		//	Deliberately not implemented.
-		copy_bouncer (
-			const copy_bouncer&);
-		copy_bouncer& operator= (const copy_bouncer&);
-	};
-
-}	//	namespace k2
-
-/**	\defgroup	Utility
-*/
-
-/**
-*	\ingroup    Utility
-*	\brief      Macro that inserts a non-copyable member into a class.
-*/
-//  !kh!
-//  Although user may define K2_DISABLE_COPY_BOUNCER (save memory?),
-//  it's highly recommended not to do so.
-//  It's just not worth sacrificing the benifits to save sizeof(size_t)
-//  bytes in non-value-sematic objects.
-//  This option may be unavailable in future versions.
-//  The rationale of using this macro instead of using boost alike
-//  noncopyable is to avoid inheritance, this may not the best
-//  technique in most senarios, but it's my preferred practice.
-#if defined(K2_DISABLE_COPY_BOUNCER)
-#   define  K2_INJECT_COPY_BOUNCER()
-#else
-#   define	K2_INJECT_COPY_BOUNCER()\
-	    k2::copy_bouncer copy_bouncer
+#if !defined(K2_BYTE_ORDER)
+//  If byte order is not specified at compile time (-DK2_BYTE_ORDER=xxxx),
+//  try figuring it out.
+#   if defined (i386) || defined (__i386__) || defined (_M_IX86) || \
+        defined (vax) || defined (__alpha)
+#       define K2_BYTE_ORDER    K2_LITTLE_ENDIAN
+#   endif
 #endif
 
-#endif	//	!K2_BITS_COPY_BOUNCER_H
+#endif  //  !K2_ENDIAN_H

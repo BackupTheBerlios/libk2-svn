@@ -26,20 +26,75 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef K2_BITS_OPT_H
-#define K2_BITS_OPT_H
+#ifndef K2_SPIN_LOCK_H
+#define K2_SPIN_LOCK_H
 
-#if defined(__GNUC__)
-#   if  defined(K2_DISABLE_OPT_BRANCH)
-#       define  K2_OPT_BRANCH_TRUE(exp)     (long(exp))
-#       define  K2_OPT_BRANCH_FALSE(exp)    (long(exp))
-#   else
-#       define  K2_OPT_BRANCH_TRUE(exp)     (long(__builtin_expect(long(exp), long(1))))
-#       define  K2_OPT_BRANCH_FALSE(exp)    (long(__builtin_expect(long(exp), long(0))))
-#   endif
-#elif defined(_MSC_VER)
-#   define  K2_OPT_BRANCH_TRUE(exp)         (long(exp))
-#   define  K2_OPT_BRANCH_FALSE(exp)        (long(exp))
+#ifndef K2_COPY_BOUNCER_H
+#   include <k2/copy_bouncer.h>
+#endif
+#ifndef K2_SCOPE_GUARD_H
+#   include <k2/scoped_guard.h>
+#endif
+#ifndef K2_ATOMIC_H
+#   include <k2/atomic.h>
+#endif
+#ifndef K2_TIMESTAMP_H
+//#   include <k2/timestamp.h>
+#   include <k2/timing.h>
 #endif
 
-#endif  //  !K2_BITS_OPT_H
+namespace k2
+{
+
+    /** \defgroup   Threading
+    */
+
+    /**
+    *   \ingroup    Threading
+    *   \brief      Threading synchronization primitive.
+    *   \relates    scoped_guard<>
+    *   \relates    timestamp
+    */
+    class spin_lock
+    {
+    public:
+        K2_INJECT_COPY_BOUNCER();
+
+        typedef scoped_guard<spin_lock> scoped_guard;
+
+        spin_lock ()
+        :   m_counter(-1)
+        {}
+
+        void acquire ()
+        {
+            while (atomic_increase(m_counter) != 0)
+                atomic_decrease(m_counter);
+        }
+        bool acquire (const timestamp& timer)
+        {
+            while (atomic_increase(m_counter) != 0)
+            {
+                atomic_decrease(m_counter);
+
+                if (timer.expired() == false)
+                    continue;
+                else
+                    return  false;
+            }
+
+            return  true;
+        }
+        void release ()
+        {
+            atomic_decrease(m_counter);
+        }
+
+    private:
+        atomic_int_t    m_counter;
+    };
+
+
+}   //  namespace k2
+
+#endif  //  !K2_SPIN_LOCK_H

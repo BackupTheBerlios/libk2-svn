@@ -29,8 +29,8 @@
 #ifndef K2_ALLOCATOR_H
 #define K2_ALLOCATOR_H
 
-#include <k2/bits/auto_alloc.h>
-#include <k2/bits/pool_alloc.h>
+#include <k2/auto_alloc.h>
+#include <k2/pool_alloc.h>
 
 }   //  namespace k2
 

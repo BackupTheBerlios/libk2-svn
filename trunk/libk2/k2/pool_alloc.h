@@ -26,20 +26,20 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef K2_BITS_POOL_ALLOC_H
-#define K2_BITS_POOL_ALLOC_H
+#ifndef K2_POOL_ALLOC_H
+#define K2_POOL_ALLOC_H
 
-#ifndef K2_BITS_FAST_LOCK_H
-#   include <k2/bits/fast_lock.h>
+#ifndef K2_FAST_LOCK_H
+#   include <k2/fast_lock.h>
 #endif
-#ifndef K2_BITS_OPT_H
-#   include <k2/bits/opt.h>
+#ifndef K2_OPT_H
+#   include <k2/opt.h>
 #endif
-#ifndef K2_BITS_COPY_BOUNCER_H
-#   include <k2/bits/copy_bouncer.h>
+#ifndef K2_COPY_BOUNCER_H
+#   include <k2/copy_bouncer.h>
 #endif
-#ifndef K2_BITS_DEFALLC_BASE_H
-#   include <k2/bits/defalloc_base.h>
+#ifndef K2_MEMORY_H
+#   include <k2/memory.h>
 #endif
 #ifndef K2_BYTE_MANIP_H
 #   include <k2/byte_manip.h>
@@ -595,4 +595,4 @@ namespace k2
 
 }   //  namespace k2
 
-#endif  //  !K2_BITS_POOL_ALLOC_H
+#endif  //  !K2_POOL_ALLOC_H

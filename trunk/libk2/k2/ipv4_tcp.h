@@ -35,8 +35,8 @@
 #ifndef K2_SOCKET_H
 #   include <k2/socket.h>
 #endif
-#ifndef K2_BITS_COPY_BOUNCER_H
-#   include <k2/bits/copy_bouncer.h>
+#ifndef K2_COPY_BOUNCER_H
+#   include <k2/copy_bouncer.h>
 #endif
 
 #ifndef K2_STD_H_MEMORY
