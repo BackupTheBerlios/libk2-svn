@@ -41,7 +41,8 @@
 #   include <iostream>
 #endif
 
-#ifdef K2_HAS_POSIX_API
+#if defined(__linux__)
+//  !kh! need to get rid of unused headers
 #   include <sys/socket.h>
 #   include <netinet/in.h>
 #   include <arpa/inet.h>
@@ -50,22 +51,14 @@
 #   include <unistd.h>
 #   include <netdb.h>
 #   include <fcntl.h>
-#elif defined(K2_HAS_WIN32_API)
+#elif defined(WIN32)
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
 #   pragma warning (disable : 4800) //  what for???
     typedef int socklen_t;
 #else
-#   error   "libk2: How to include socket_desc header(s)?"
+#   error   "libk2: Manual attention required."
 #endif
-
-namespace   //  unnamed
-{
-
-
-}   //  unnamed namespace
-
-
 
 //static
 const k2::ipv4::interface_addr::loopback_tag

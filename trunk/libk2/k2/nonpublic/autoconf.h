@@ -35,21 +35,33 @@
 #endif
 
 //  Compiler
-#if defined(_MSC_VER) && (_MSC_VER >= 1310) //  VC.NET 2003
-#   define K2_COMPILER_VC
-#   define K2_COMPILER_VER      (_MSC_VER / 100)
-#   define K2_COMPILER_MINOR    (_MSC_VER % 100 / 10)
-#elif defined(__GNUC__) && (__GNUC__ >= 3) && (__GNUC_MINOR__ >= 2)
-#   define K2_COMPILER_GCC
-#   define K2_COMPILER_VER      __GNUC__
-#   define K2_COMPILER_MINOR    __GNUC_MINOR__
-#elif defined(__BCPLUSPLUS__) && (__BCPLUSPLUS__ >= 0x0560) // BCB6
-#   define K2_COMPILER_BCB
-#   define K2_COMPILER_VER      (__BCPLUSPLUS__ / 100)
-#   define K2_COMPILER_MINOR    (__BCPLUSPLUS__ % 100 / 10)
-#   define _WIN32
+#if defined(_MSC_VER)
+#   if(_MSC_VER >= 1310) //  VC.NET 2003
+#       define K2_COMPILER_VC
+#       define K2_COMPILER_VER      (_MSC_VER / 100)
+#       define K2_COMPILER_MINOR    (_MSC_VER % 100 / 10)
+#   else
+#       error "libk2: Your version of VC is not supported, upgrade to VC.NET 2003 or newer"
+#   endif
+#elif defined(__GNUC__)
+#   if(__GNUC__ >= 3) && (__GNUC_MINOR__ >= 2)
+#       define K2_COMPILER_GCC
+#       define K2_COMPILER_VER      __GNUC__
+#       define K2_COMPILER_MINOR    __GNUC_MINOR__
+#   else
+#       error "libk2: Your version of GCC is not supported, upgrade to GCC 3.2 or newer"
+#   endif
+#elif defined(__BCPLUSPLUS__)
+#   if(__BCPLUSPLUS__ >= 0x0560) // BCB6
+#       define K2_COMPILER_BCB
+#       define K2_COMPILER_VER      (__BCPLUSPLUS__ / 100)
+#       define K2_COMPILER_MINOR    (__BCPLUSPLUS__ % 100 / 10)
+#       define _WIN32
+#   else
+#       error "libk2: Your version of Borland compiler is not supported, upgrade to version 5.6 or newer"
+#   endif
 #else
-#   error "Unknown compiler!!!"
+#   error "libk2: Unknown compiler, mail to kenho@bluebottle.com for support or fix it yourself."
 #endif
 
 //  OS
