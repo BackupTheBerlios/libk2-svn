@@ -19,7 +19,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../;../depend/include"
+				AdditionalIncludeDirectories="../../;../contrib/include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;K2_DLL_EXPORTS; K2_BUILD;K2_DEBUG"
 				MinimalRebuild="TRUE"
 				BasicRuntimeChecks="3"
@@ -36,7 +36,7 @@
 				AdditionalDependencies="ws2_32.lib pthreadVC.lib"
 				OutputFile="$(OutDir)/libk2.dll"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../depend/lib"
+				AdditionalLibraryDirectories="../contrib/lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile="$(OutDir)/libk2.lib.pdb"
 				SubSystem="2"
@@ -71,7 +71,7 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../;../depend/include"
+				AdditionalIncludeDirectories="../../;../contrib/include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;K2_DLL_EXPORTS;K2_BUILD"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -85,7 +85,7 @@
 				AdditionalDependencies="ws2_32.lib pthreadVC.lib"
 				OutputFile="$(OutDir)/libk2.dll"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../depend/lib"
+				AdditionalLibraryDirectories="../contrib/lib"
 				GenerateDebugInformation="FALSE"
 				ProgramDatabaseFile="$(OutDir)/libk2.lib.pdb"
 				SubSystem="2"
