@@ -58,10 +58,6 @@ Directory structure:
       Doxygen-ed documents of win32.vc.net builds
       Not included in snapshot
 
-    k2/win32.vc.net/working/
-      Working directory for builds
-      Also contains required DLLs to be loaded at runtime
-
 Build instructions on Windows with VC.net:
     1.  Presumably you already checked out lastest release of libk2 from either
         svnhosting.org or sourceforge.net.
