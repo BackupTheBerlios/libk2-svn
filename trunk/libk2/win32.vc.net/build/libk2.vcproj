@@ -156,9 +156,6 @@
 				RelativePath="..\..\k2\atomic.h">
 			</File>
 			<File
-				RelativePath="..\..\k2\bouncer.h">
-			</File>
-			<File
 				RelativePath="..\..\k2\byte_manip.h">
 			</File>
 			<File
