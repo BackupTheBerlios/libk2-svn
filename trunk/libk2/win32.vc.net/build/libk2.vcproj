@@ -122,6 +122,9 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
+				RelativePath="..\..\source\addr.cpp">
+			</File>
+			<File
 				RelativePath="..\..\source\assert.cpp">
 			</File>
 			<File
@@ -131,22 +134,22 @@
 				RelativePath="..\..\source\memory.cpp">
 			</File>
 			<File
-				RelativePath="..\..\source\net.cpp">
-			</File>
-			<File
 				RelativePath="..\..\source\process.cpp">
 			</File>
 			<File
 				RelativePath="..\..\source\runtime.cpp">
 			</File>
 			<File
-				RelativePath="..\..\source\socket_error.cpp">
+				RelativePath="..\..\source\socket.cpp">
 			</File>
 			<File
 				RelativePath="..\..\source\threading.cpp">
 			</File>
 			<File
 				RelativePath="..\..\source\timing.cpp">
+			</File>
+			<File
+				RelativePath="..\..\source\transport.cpp">
 			</File>
 		</Filter>
 		<Filter
@@ -228,7 +231,7 @@
 				RelativePath="..\..\k2\singleton.h">
 			</File>
 			<File
-				RelativePath="..\..\k2\socket_error.h">
+				RelativePath="..\..\k2\socket.h">
 			</File>
 			<File
 				RelativePath="..\..\k2\spin_lock.h">
