@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 8.00
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dll", "dll.vcproj", "{8A28E917-C89D-4AEF-A584-EAFCDFC441D4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libk2.dll", "libk2.dll.vcproj", "{8A28E917-C89D-4AEF-A584-EAFCDFC441D4}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject

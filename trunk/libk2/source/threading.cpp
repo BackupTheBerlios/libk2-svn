@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2003, 2004, Kenneth Chang-Hsing Ho <kenho@bluebottle.com>
- * All rights reserved.
+ * Copyright (c) 2003, 2004, 2005,
+ * Kenneth Chang-Hsing Ho <kenho@bluebottle.com> All rights reterved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,52 +10,37 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ * 3. Neither the name of k2, libk2, copyright owners nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <k2/thread.h>
 
-#ifndef K2_SPIN_LOCK_H
-#   include <k2/spin_lock.h>
-#endif
-#ifndef K2_THREAD_ONCE_H
-#   include <k2/thread_once.h>
-#endif
-#ifndef K2_MUTEX_H
-#   include <k2/mutex.h>
-#endif
-#ifndef K2_COND_VAR_H
-#   include <k2/cond_var.h>
-#endif
-#ifndef K2_TLS_H
-#   include <k2/tls.h>
-#endif
-#ifndef K2_SINGLETON_H
-#   include <k2/singleton.h>
-#endif
-#ifndef K2_TIMING_H
-#   include <k2/timing.h>
-#endif
-#ifndef K2_ASSERT_H
-#   include <k2/assert.h>
-#endif
-#ifndef K2_ERRNO_H
-#   include <k2/errno.h>
-#endif
+#include <k2/bits/spin_lock.h>
+#include <k2/thread_once.h>
+#include <k2/mutex.h>
+#include <k2/cond_var.h>
+#include <k2/tls.h>
+#include <k2/singleton.h>
+#include <k2/timing.h>
+#include <k2/assert.h>
+#include <k2/errno.h>
 
+#include <k2/bits/os.h>
 
-#if defined(K2_HAS_POSIX_API)
+#if defined(K2_OS_UNIX)
 #   include <unistd.h>  //  usleep
     namespace
     {
@@ -64,7 +49,7 @@
             ::usleep(msec * 1000);
         }
     }
-#elif defined(K2_HAS_WIN32_API)
+#elif defined(K2_OS_WIN32)
 #   include <windows.h>
     namespace
     {
@@ -112,38 +97,6 @@ namespace
             sizeof(handle) >= sizeof(pthread_key_t), handle_size_too_small);
         return  reinterpret_cast<const pthread_key_t&>(handle.holder);
     }
-}
-
-
-k2::spin_lock::spin_lock ()
-:   m_lock(-1)
-{
-}
-void
-k2::spin_lock::acquire ()
-{
-    while (atomic_increase(m_lock) != 0)
-        atomic_decrease(m_lock);
-}
-bool
-k2::spin_lock::acquire (const timestamp& timer)
-{
-    while (atomic_increase(m_lock) != 0)
-    {
-        atomic_decrease(m_lock);
-
-        if (timer.expired() == false)
-            continue;
-        else
-            return  false;
-    }
-
-    return  true;
-}
-void
-k2::spin_lock::release ()
-{
-    atomic_decrease(m_lock);
 }
 
 

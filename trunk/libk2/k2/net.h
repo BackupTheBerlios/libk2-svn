@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2003, 2004, Kenneth Chang-Hsing Ho <kenho@bluebottle.com>
- * All rights reserved.
+ * Copyright (c) 2003, 2004, 2005,
+ * Kenneth Chang-Hsing Ho <kenho@bluebottle.com> All rights reterved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,155 +10,128 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ * 3. Neither the name of k2, libk2, copyright owners nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #ifndef K2_NET_H
 #define K2_NET_H
 
-#ifndef K2_CONFIG_H
-#   include <k2/config.h>
+#ifndef K2_TYPE_MANIP_H
+#   include <k2/type_manip.h>
 #endif
-#ifndef K2_BYTE_MANIP_H
-#   include <k2/byte_manip.h>
+
+#ifndef K2_BITS_ENDIAN_H
+#   include <k2/bits/endian.h>
 #endif
-#ifndef K2_COPY_BOUNCER_H
-#   include <k2/copy_bouncer.h>
+#if !defined(K2_BYTE_ORDER)
+#   error "libk2 : No byte-order defined."
+#endif
+
+#ifndef K2_STD_H_ALGORITHM
+#   define  K2_STD_H_ALGORITHM
+#   include <algorithm>
 #endif
 
 namespace k2
 {
 
-    template <typename Int>
-    Int netconv (Int value)
-#if defined(K2_BYTEORDER_BIGENDIAN)
+#if !defined(DOXYGENBLIND)
+
+    namespace nonpublic
     {
-        //  Big-endian need no net-to-host/host-to-net conversion.
-        K2_STATIC_ASSERT(is_integer<Int>::value, value_is_not_integer);
-        return  value;
-    }
+        template <typename Int, size_t Size>
+        Int net_conv (Int val, const integer_tag<size_t, Size>);
+
+        template <typename Int>
+        Int net_conv (Int val, const integer_tag<size_t, 1>)
+        {
+            return  v
+        }
+
+#if (K2_BYTE_ORDER == K2_LITTLE_ENDIAN)
+
+        template <typename Int>
+        Int net_conv (Int val, const integer_tag<size_t, 2>)
+        {
+            Int  ret = val;
+            const char* src = reinterpret_cast<const char*>(&val);
+            char*       dst = reinterpret_cast<char*>(&ret);
+            dst[0] = src[1];
+            dst[1] = src[0];
+            return  ret;
+        }
+        template <typename Int>
+        Int net_conv (Int val, const integer_tag<size_t, 4>)
+        {
+            Int  ret = val;
+            const char* src = reinterpret_cast<const char*>(&val);
+            char*       dst = reinterpret_cast<char*>(&ret);
+            dst[0] = src[3];
+            dst[1] = src[2];
+            dst[2] = src[1];
+            dst[3] = src[0];
+            return  ret;
+        }
+
+#elif (K2_BYTE_ORDER == K2_BIT_ENDIAN)
+
+        template <typename Int>
+        Int net_conv (Int val, const integer_tag<size_t, 2>)
+        {
+            return  val;
+        }
+        template <typename Int>
+        Int net_conv (Int val, const integer_tag<size_t, 4>)
+        {
+            return  val;
+        }
+
 #else
-    {
-        K2_STATIC_ASSERT(is_integer<Int>::value, value_is_not_integer);
-        return  nonpublic::netconv(value, integer_tag<size_t, sizeof(Int)>());
+
+#endif  //  K2_BYTEORDER == K2_LITTLE_ENDIAN
     }
-#endif
+#endif  //  !DOXYGENBLIND
 
     template <typename Int>
-    Int net2host (Int value)
+    Int net_conv (Int val)
     {
-        return  netconv(value);
-    }
-    template <typename Int>
-    Int host2net (Int value)
-    {
-        return  netconv(value);
+        return  nonpublic::net_conv(val, integer_tag<size_t, sizeof(Int)>());
     }
 
     typedef uint16_t    host16_t;
     typedef uint32_t    host32_t;
 
-    template <bool Aligned = false>
-    struct net_codec
+    template <typename OutIter, typename Int>
+    OutIter net_encode (Int from, OutIter to)
     {
-        template <typename Int>
-        static Int fetch (const void* from)
-        {
-            Int   tmp;
-            std::copy(
-                reinterpret_cast<char*>(from),
-                reinterpret_cast<char*>(from) + sizeof(Int),
-                reinterpret_cast<char*>(&tmp));
-
-            return  net2host(tmp);
-        }
-        template <typename Int>
-        static void dump (void* to, Int val)
-        {
-            val = host2net(val);
-
-            std::copy(
-                reinterpret_cast<const char*>(&val),
-                reinterpret_cast<const char*>(&val + sizeof(Int)),
-                reinterpret_cast<char*>(to));
-        }
-    };
-    template <>
-    struct net_codec</*Aligned =*/ true>
-    {
-        template <typename Int>
-        static Int fetch (const void* from)
-        {
-            return  net2host(*reinterpret_cast<const Int*>(from));
-        }
-        template <typename Int>
-        static void dump (void* to, Int val)
-        {
-            *reinterpret_cast<Int*>(to) = host2net(val);
-        }
-    };
-
-    template <bool Aligned = false>
-    struct host_codec
-    {
-        template <typename Int>
-        static Int fetch (const void* from)
-        {
-            Int   tmp;
-            std::copy(
-                reinterpret_cast<char*>(from),
-                reinterpret_cast<char*>(from) + sizeof(Int),
-                reinterpret_cast<char*>(&tmp));
-
-            return  tmp;
-        }
-        template <typename Int>
-        static void dump (void* to, Int val)
-        {
-            std::copy(
-                reinterpret_cast<const char*>(&val),
-                reinterpret_cast<const char*>(&val + sizeof(Int)),
-                reinterpret_cast<char*>(to));
-        }
-    };
-    template <>
-    struct host_codec</*Aligned =*/ true>
-    {
-        template <typename Int>
-        static Int fetch (const void* from)
-        {
-            return  *reinterpret_cast<const Int*>(from);
-        }
-        template <typename Int>
-        static void dump (void* to, Int val)
-        {
-            *reinterpret_cast<Int*>(to) = val;
-        }
-    };
-
-    template <typename Codec, typename Int>
-    Int unserialize (const void*& from)
-    {
-        Int ret = Codec::fetch(from);
-        std::advance(reinterpret_cast<const char*&>(from), sizeof(Int));
-        return  ret;
+        Int net = net_conv(from);
+        std::copy(
+            reinterpret_cast<const char*>(&net),
+            reinterpret_cast<const char*>(&net + 1),
+            to);
+       return   to + sizeof(from);
     }
-    template <typename Codec, typename Int>
-    void serialize (void*& to, Int val)
+    template <typename InIter, typename Int>
+    InIter net_decode (InIter from, Int& to)
     {
-        Codec::dump(to, val);
-        std::advance(reinterpret_cast<char*&>(from), sizeof(Int))
+        std::copy(
+            from,
+            from + sizeof(to),
+            reinterpret_cast<char*>(&to));
+        return  from + sizeof(to);
     }
 
 }   //  namespace k2

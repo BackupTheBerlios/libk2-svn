@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2003, 2004, Kenneth Chang-Hsing Ho <kenho@bluebottle.com>
- * All rights reserved.
+ * Copyright (c) 2003, 2004, 2005,
+ * Kenneth Chang-Hsing Ho <kenho@bluebottle.com> All rights reterved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,28 +10,30 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ * 3. Neither the name of k2, libk2, copyright owners nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #ifndef K2_THREAD_H
 #define K2_THREAD_H
 
-#ifndef K2_CONFIG_H
-#   include <k2/config.h>
+#ifndef K2_BITS_DLSPEC_H
+#   include <k2/bits/dlspec.h>
 #endif
-#ifndef K2_COPY_BOUNCER_H
-#   include <k2/copy_bouncer.h>
+#ifndef K2_BITS_COPY_BOUNCER_H
+#   include <k2/bits/copy_bouncer.h>
 #endif
 #ifndef K2_MEMORY_H
 #   include <k2/memory.h>
@@ -56,6 +58,23 @@ namespace k2
     }
 #endif  //  !DOXYGEN_BLIND
 
+#if(0)
+    template <size_t Size, typename PoolTag>
+    class pooled_thread
+    {
+    public:
+        template <typename ThreadEntry>
+        explicit pooled_thread (ThreadEntry thread_entry);
+        ~pooled_thread ();
+
+        template <typename ThreadEntry>
+        static std::auto_ptr<thread_cntx>   spawn (ThreadEntry thread_entry);
+        static void                         join (std::auto_ptr<thread_cntx>);
+
+        static void                         spawn_detached (ThreadEntry thread_entry);
+    };
+#endif
+
     /**
     *   \ingroup    Threading
     *   \brief      Concurrent excecution construct.
@@ -79,8 +98,8 @@ namespace k2
         *   \param  thread_entry    A copy-constructable generator functor.
         *   \throw  bad_resource_alloc
         */
-        template <typename generator_t_>
-        thread (generator_t_ thread_entry)
+        template <typename ThreadEntry>
+        thread (ThreadEntry thread_entry)
         :   m_pcntx(thread::spawn(thread_entry, false))
         {
         }
@@ -92,8 +111,8 @@ namespace k2
         *   \param  thread_entry    A copy-constructable generator functor.
         *   \throw  bad_resource_alloc
         */
-        template <typename generator_t_>
-        static void spawn_detached (generator_t_ thread_entry)
+        template <typename ThreadEntry>
+        static void spawn_detached (ThreadEntry thread_entry)
         {
             thread::spawn(thread_entry, true);
         }
@@ -148,10 +167,10 @@ namespace k2
         *
         *   See thread::cancel()
         */
-        template <typename generator_t_>
-        static void test_cancel (const generator_t_& do_on_cancel)
+        template <typename ThreadEntry>
+        static void test_cancel (const ThreadEntry& do_on_cancel)
         {
-            generator_t_    local(do_on_cancel);
+            ThreadEntry    local(do_on_cancel);
             try
             {
                 thread::test_cancel();
@@ -181,24 +200,24 @@ namespace k2
         K2_DLSPEC static void sleep (size_t msec);
 
     private:
-        template <typename generator_t_>
+        template <typename ThreadEntry>
         static void thread_entry_wrapper (void* arg)
         {
-            std::auto_ptr<generator_t_>
-                pthread_entry(reinterpret_cast<generator_t_*>(arg));
+            std::auto_ptr<ThreadEntry>
+                pthread_entry(reinterpret_cast<ThreadEntry*>(arg));
 
             //  If you get a compile error here, note that thread_entry
             //  has to be a functor taking no argument (a.k.a generator).
             (*pthread_entry)();
         }
-        template <typename generator_t_>
+        template <typename ThreadEntry>
         static nonpublic::thread_cntx* spawn (const
-            generator_t_& thread_entry, bool detached)
+            ThreadEntry& thread_entry, bool detached)
         {
             //  If you get a compile error here, note that thread_entry
             //  has to be copy constructable.
-            generator_t_* pthread_entry = new generator_t_(thread_entry);
-            return  spawn_impl(thread_entry_wrapper< generator_t_ >,
+            ThreadEntry* pthread_entry = new ThreadEntry(thread_entry);
+            return  spawn_impl(thread_entry_wrapper<ThreadEntry>,
                 reinterpret_cast<void*>(pthread_entry), detached);
         }
         K2_DLSPEC static nonpublic::thread_cntx* spawn_impl (

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2003, 2004, Kenneth Chang-Hsing Ho <kenho@bluebottle.com>
- * All rights reserved.
+ * Copyright (c) 2003, 2004, 2005,
+ * Kenneth Chang-Hsing Ho <kenho@bluebottle.com> All rights reterved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,26 +10,25 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ * 3. Neither the name of k2, libk2, copyright owners nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #ifndef K2_TYPE_MANIP_H
 #define K2_TYPE_MANIP_H
 
-#ifndef K2_CONFIG_H
-#   include <k2/config.h>
-#endif
 #ifndef K2_STDINT_H
 #   include <k2/stdint.h>
 #endif
@@ -37,14 +36,14 @@
 namespace k2
 {
 
-    template <typename type_, bool>
+    template <typename Type, bool>
     struct type_if
     {
     };
-    template <typename type_>
-    struct type_if<type_, true>
+    template <typename Type>
+    struct type_if<Type, true>
     {
-        typedef type_   type;
+        typedef Type   type;
     };
 
     template <typename type1_, typename type2_, bool>
@@ -69,98 +68,98 @@ namespace k2
         static const bool value = true;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct is_reference
     {
         static const bool   value = false;
     };
-    template <typename type_>
-    struct is_reference<type_&>
+    template <typename Type>
+    struct is_reference<Type&>
     {
         static const bool   value = true;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct is_const
     {
         static const bool   value = false;
     };
-    template <typename type_>
-    struct is_const<const type_>
+    template <typename Type>
+    struct is_const<const Type>
     {
         static const bool   value = true;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct is_pointer
     {
         static const bool   value = false;
     };
-    template <typename type_>
-    struct is_pointer<type_*>
+    template <typename Type>
+    struct is_pointer<Type*>
     {
         static const bool   value = true;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct is_array
     {
         static const bool   value = false;
     };
-    template <typename type_, size_t size_>
-    struct is_array<type_[size_]>
+    template <typename Type, size_t Size>
+    struct is_array<Type[Size]>
     {
         static const bool   value = true;
-        static const size_t size = size_;
+        static const size_t size = Size;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct strip_const
     {
-        typedef type_   type;
+        typedef Type   type;
     };
-    template <typename type_>
-    struct strip_const<const type_>
+    template <typename Type>
+    struct strip_const<const Type>
     {
-        typedef type_   type;
+        typedef Type   type;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct strip_reference
     {
-        typedef type_   type;
+        typedef Type   type;
     };
-    template <typename type_>
-    struct strip_reference<type_&>
+    template <typename Type>
+    struct strip_reference<Type&>
     {
-        typedef type_   type;
+        typedef Type   type;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct strip_pointer
     {
-        typedef type_   type;
+        typedef Type   type;
     };
-    template <typename type_>
-    struct strip_pointer<type_*>
+    template <typename Type>
+    struct strip_pointer<Type*>
     {
-        typedef type_   type;
+        typedef Type   type;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct strip_array
     {
-        typedef type_   type;
+        typedef Type   type;
     };
-    template <typename type_, size_t size_>
-    struct strip_array<type_[size_]>
+    template <typename Type, size_t Size>
+    struct strip_array<Type[Size]>
     {
-        typedef type_   type;
+        typedef Type   type;
     };
 
 
 
-    template <typename type_>
+    template <typename Type>
     struct is_integer
     {
         static const bool   value = false;
@@ -226,7 +225,7 @@ namespace k2
         static const bool   value = true;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct is_float_point
     {
         static const bool   value = false;
@@ -247,20 +246,20 @@ namespace k2
         static const bool   value = true;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct is_primitive
     {
         static const bool   value =
-            is_integer<type_>::value ? true :
-            is_float_point<type_>::value ? true :
-            is_pointer<type_>::value ? true :
+            is_integer<Type>::value ? true :
+            is_float_point<Type>::value ? true :
+            is_pointer<Type>::value ? true :
             false;
     };
 
-    template <typename type_>
+    template <typename Type>
     struct type_tag
     {
-        typedef type_   type;
+        typedef Type   type;
     };
 
     template <typename int_t_, int_t_ value_>

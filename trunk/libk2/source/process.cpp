@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2003, 2004, Kenneth Chang-Hsing Ho <kenho@bluebottle.com>
- * All rights reserved.
+ * Copyright (c) 2003, 2004, 2005,
+ * Kenneth Chang-Hsing Ho <kenho@bluebottle.com> All rights reterved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,47 +10,45 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ * 3. Neither the name of k2, libk2, copyright owners nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <k2/process.h>
 
-#ifndef K2_SPIN_LOCK_H
-#   include <k2/spin_lock.h>
-#endif
-#ifndef K2_STD_H_EXCEPTION
-#   include <exception>
-#   define  K2_STD_H_EXCEPTION
+#ifndef K2_EXCEPTION_H
+#   include <k2/exception.h>
 #endif
 #ifndef K2_STD_H_MEMORY
 #   include <memory>
 #   define  K2_STD_H_MEMORY
 #endif
 
-#if defined(K2_HAS_POSIX_API)
-//  These headers don't need to be guarded,
-//  because they are platform dependent,
-//  therefore would not be included by any k2 headers.
+#ifndef K2_BITS_OS_H
+#   include <k2/bits/os.h>
+#endif
+
+#if defined(K2_OS_UNIX)
 #   include <sys/types.h>
 #   include <unistd.h>
 #   include <sys/wait.h>
 #   include <ctype.h>
-#elif defined(K2_HAS_WIN32_API)
-//  Same here, platform dependent.
+#elif defined(K2_OS_WIN32)
 #   include <windows.h>
 #else
-#   error   "libk2: How to maniplate processes?"
+#   error   "libk2: Manual attention required."
 #endif
 
 namespace k2
@@ -67,10 +65,10 @@ namespace k2
             class process_impl
             {
             private:
-#if defined(K2_HAS_POSIX_API)
+#if defined(K2_OS_UNIX)
                 typedef ::pid_t     native_id_t;
                 typedef native_id_t native_handle_t;
-#elif defined(K2_HAS_WIN32_API)
+#elif defined(K2_OS_WIN32)
                 typedef ::DWORD     native_id_t;
                 typedef ::HANDLE    native_handle_t;
 #endif
@@ -109,7 +107,7 @@ namespace k2
             auto_ptr<process_impl> process_impl::create (
     	    const string& filename, const string& cmdline, bool detached_state)
             {
-#if defined(K2_HAS_POSIX_API)
+#if defined(K2_OS_UNIX)
                 native_id_t pid = ::fork();
 
                 if (pid == 0)
@@ -147,7 +145,7 @@ namespace k2
                     else
                         return  auto_ptr<process_impl>(new process_impl(pid, pid));
                 }
-#elif defined(K2_HAS_WIN32_API)
+#elif defined(K2_OS_WIN32)
                 STARTUPINFO         sinf;
                 memset(&sinf, 0, sizeof(sinf));
                 sinf.cb = sizeof(STARTUPINFO);
@@ -205,9 +203,9 @@ namespace k2
             //  static
             void process_impl::join_and_destroy (auto_ptr<process_impl> impl_ap)
             {
-#if defined(K2_HAS_POSIX_API)
+#if defined(K2_OS_UNIX)
                 ::waitpid(impl_ap->m_id, 0, 0);
-#elif defined(K2_HAS_WIN32_API)
+#elif defined(K2_OS_WIN32)
                 ::WaitForSingleObject(impl_ap->m_handle, INFINITE);
                 ::CloseHandle(impl_ap->m_handle);
 #endif

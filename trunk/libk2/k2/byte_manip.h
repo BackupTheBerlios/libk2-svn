@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2003, 2004, Kenneth Chang-Hsing Ho <kenho@bluebottle.com>
- * All rights reserved.
+ * Copyright (c) 2003, 2004, 2005,
+ * Kenneth Chang-Hsing Ho <kenho@bluebottle.com> All rights reterved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,29 +10,25 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ * 3. Neither the name of k2, libk2, copyright owners nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+ * TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #ifndef K2_BYTEMANIP_H
 #define K2_BYTEMANIP_H
 
-#ifndef K2_CONFIG_H
-#   include <k2/config.h>
-#endif
-#ifndef K2_TYPE_MANIP_H
-#   include <k2/type_manip.h>
-#endif
 #ifndef K2_ASSERT_H
 #   include <k2/assert.h>
 #endif
@@ -42,9 +38,6 @@
 #   define  K2_STD_H_ALGORITHM
 #endif
 
-#if !defined(K2_BYTEORDER_BIGENDIAN) && !defined(K2_BYTEORDER_LITTLEENDIAN)
-#   error Requires K2_BYTEORDER_BIGENDIAN or K2_BYTEORDER_LITTLEENDIAN defined!!!
-#endif
 
 namespace k2
 {
@@ -64,70 +57,21 @@ namespace k2
             std::swap(*head, *tail);
     }
 
-
-#if !defined(DOXYGEN_BLIND)
-
-    namespace nonpublic
-    {
-#if defined(K2_BYTEORDER_LITTLEENDIAN)
-        template <typename int_t_, size_t n_>
-        int_t_ netconv (int_t_ value, const integer_tag<size_t, n_> /*size_tag*/);
-
-        template <typename int_t_>
-        int_t_ netconv (int_t_ value, const integer_tag<size_t, 1> /*size_tag*/)
-        {
-            return  value;
-        }
-        template <typename int_t_>
-        int_t_ netconv (int_t_ value, const integer_tag<size_t, 2> /*size_tag*/)
-        {
-            int_t_  res = value;
-            const char* src = reinterpret_cast<const char*>(&value);
-            char*       dst = reinterpret_cast<char*>(&res);
-            dst[0] = src[1];
-            dst[1] = src[0];
-            return  res;
-        }
-        template <typename int_t_>
-        int_t_ netconv (int_t_ value, const integer_tag<size_t, 4> /*size_tag*/)
-        {
-            int_t_  res = value;
-            const char* src = reinterpret_cast<const char*>(&value);
-            char*       dst = reinterpret_cast<char*>(&res);
-            dst[0] = src[3];
-            dst[1] = src[2];
-            dst[2] = src[1];
-            dst[3] = src[0];
-            return  res;
-        }
-        template <typename int_t_>
-        int_t_ netconv (int_t_ value, const integer_tag<size_t, 8> /*size_tag*/)
-        {
-            int_t_  res = value;
-            const char* src = reinterpret_cast<const char*>(&value);
-            char*       dst = reinterpret_cast<char*>(&res);
-            dst[0] = src[7];
-            dst[1] = src[6];
-            dst[2] = src[5];
-            dst[3] = src[4];
-            dst[4] = src[3];
-            dst[5] = src[2];
-            dst[6] = src[1];
-            dst[7] = src[0];
-            return  res;
-        }
-#endif  //  K2_BYTEORDER_LITTLEENDIAN
-    }
-#endif  //  !DOXYGEN_BLIND
-
-    template <size_t size_>
     struct safe_alignof
     {
-    private:
-        static const size_t  alignment = 8;
-    public:
-        static const size_t  value =
-            ((size_ + alignment-1) & ~(alignment - 1 ));
+        static const size_t default_aligment = 8;
+
+        template <size_t Size, size_t Alignment = default_aligment>
+        struct constant
+        {
+            static const size_t  value =
+                ((Size + Alignment - 1) & ~(Alignment - 1 ));
+        };
+
+        size_t operator() (size_t size, size_t alignment = default_aligment)
+        {
+            return  ((size + alignment-1) & ~(alignment - 1 ));
+        }
     };
 
 }   //  namespace k2

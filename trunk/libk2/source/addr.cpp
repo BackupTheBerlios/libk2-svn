@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2003, 2004, Kenneth Chang-Hsing Ho <kenho@bluebottle.com>
- * All rights reserved.
+ * Copyright (c) 2003, 2004, 2005,
+ * Kenneth Chang-Hsing Ho <kenho@bluebottle.com> All rights reterved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -10,19 +10,21 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. The name of the author may not be used to endorse or promote products
- *    derived from this software without specific prior written permission.
+ * 3. Neither the name of k2, libk2, copyright owners nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * APARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #ifndef K2_IPV4_ADDR_H
 #   include <k2/ipv4_addr.h>
@@ -30,18 +32,14 @@
 #ifndef K2_IPV6_ADDR_H
 #   include <k2/ipv6_addr.h>
 #endif
-#ifndef K2_BYTE_MANIP_H
-#   include <k2/byte_manip.h>
-#endif
 #ifndef K2_ASSERT_H
 #   include <k2/assert.h>
 #endif
 
-#ifndef K2_STD_H_IOSTREAM
-#   include <iostream>
+#ifndef K2_BITS_OS_H
+#   include <k2/bits/os.h>
 #endif
-
-#if defined(__linux__)
+#if defined(K2_OS_UNIX)
 //  !kh! need to get rid of unused headers
 #   include <sys/socket.h>
 #   include <netinet/in.h>
@@ -51,7 +49,7 @@
 #   include <unistd.h>
 #   include <netdb.h>
 #   include <fcntl.h>
-#elif defined(WIN32)
+#elif defined(K2_OS_WIN32)
 #   include <winsock2.h>
 #   include <ws2tcpip.h>
 #   pragma warning (disable : 4800) //  what for???
@@ -135,7 +133,7 @@ k2::ipv4::transport_addr::transport_addr (const interface_addr& if_addr, host16_
 }
 k2::ipv4::transport_addr::transport_addr (const sockaddr_in& bsd_tp_addr)
 :   m_if_addr(bsd_tp_addr.sin_addr),
-    m_port(net2host(bsd_tp_addr.sin_port))
+    m_port(net_conv(bsd_tp_addr.sin_port))
 {
 }
 k2::ipv4::transport_addr::operator const sockaddr_in () const
@@ -143,7 +141,7 @@ k2::ipv4::transport_addr::operator const sockaddr_in () const
     sockaddr_in ret;
     ret.sin_family      = AF_INET;
     ret.sin_addr        = in_addr(m_if_addr);
-    ret.sin_port        = host2net(m_port);
+    ret.sin_port        = net_conv(m_port);
     return  ret;
 }
 const k2::ipv4::interface_addr&
@@ -332,9 +330,9 @@ k2::ipv6::transport_addr::transport_addr (
 }
 k2::ipv6::transport_addr::transport_addr (const sockaddr_in6& bsd_tp_addr)
 :   m_if_addr(bsd_tp_addr.sin6_addr)
-,   m_port(net2host(bsd_tp_addr.sin6_port))
-,   m_flowinfo(net2host(bsd_tp_addr.sin6_flowinfo))
-,   m_scope_id(net2host(bsd_tp_addr.sin6_scope_id))
+,   m_port(net_conv(bsd_tp_addr.sin6_port))
+,   m_flowinfo(net_conv(bsd_tp_addr.sin6_flowinfo))
+,   m_scope_id(net_conv(bsd_tp_addr.sin6_scope_id))
 {
 }
 k2::ipv6::transport_addr::operator const sockaddr_in6 () const
@@ -342,9 +340,9 @@ k2::ipv6::transport_addr::operator const sockaddr_in6 () const
     sockaddr_in6    ret;
     ret.sin6_family   = AF_INET6;
     ret.sin6_addr     = m_if_addr;
-    ret.sin6_port     = host2net(m_port);
-    ret.sin6_flowinfo = host2net(m_flowinfo & 0x000fffff);
-    ret.sin6_scope_id = host2net(m_scope_id);
+    ret.sin6_port     = net_conv(m_port);
+    ret.sin6_flowinfo = net_conv(m_flowinfo & 0x000fffff);
+    ret.sin6_scope_id = net_conv(m_scope_id);
 
     return  ret;
 }
